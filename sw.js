@@ -1,7 +1,7 @@
 // ── Service Worker – Golf du Clou Stableford ──
 // Stratégie : Cache First – fonctionne 100% hors réseau sur le parcours
 // ⚠️  Incrémenter CACHE_NAME à chaque déploiement pour forcer la mise à jour
-const CACHE_NAME = 'golf-clou-v3';
+const CACHE_NAME = 'golf-clou-v4';
 const ASSETS = [
   './',
   './index.html',
