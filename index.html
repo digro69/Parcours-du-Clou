@@ -256,12 +256,40 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 
 /* Affichage du score courant au-dessus du clavier */
 .score-display {
-  text-align:center; margin-bottom:8px;
+  text-align:center; margin-bottom:0;
   font-size:3.2rem; font-weight:900; line-height:1;
   color:var(--gd); min-height:3.6rem;
-  transition:all .15s;
+  transition:all .15s; flex:1;
+  display:flex; align-items:center; justify-content:center;
 }
 .score-display.empty { color:#d0ddd4; }
+
+/* Flèches de navigation gauche/droite autour du score */
+.score-nav-row {
+  display:flex; align-items:center; gap:6px; margin-bottom:8px;
+}
+.nav-arrow {
+  width:52px; height:52px; border-radius:50%;
+  border:2px solid #d0ddd4; background:#f4f8f4;
+  font-size:2rem; font-weight:300; color:var(--gd); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  transition:all .12s; line-height:1; padding:0;
+}
+.nav-arrow:active { background:#d4e5d8; border-color:var(--gm); transform:scale(.92); }
+.nav-arrow:disabled { opacity:.22; cursor:default; }
+
+/* Barre de score total en cours */
+.running-bar {
+  background:rgba(26,92,42,.07); border-radius:10px;
+  padding:8px 12px; margin-bottom:10px;
+  display:flex; align-items:center; justify-content:space-around; gap:4px;
+}
+.running-bar.empty .rb-val { color:#b0c4b8; }
+.rb-item { text-align:center; }
+.rb-val  { font-size:1.05rem; font-weight:800; color:var(--gd); line-height:1; }
+.rb-lbl  { font-size:.58rem; color:var(--mut); margin-top:2px; font-weight:600;
+           text-transform:uppercase; letter-spacing:.3px; }
 
 /* Grille 3×3 */
 .key-grid {
@@ -533,11 +561,23 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
     <!-- Info trou -->
     <div id="hole-display"></div>
 
+    <!-- Barre de score total en cours -->
+    <div class="running-bar empty" id="running-bar">
+      <div class="rb-item"><div class="rb-val" id="rb-v1">–</div><div class="rb-lbl" id="rb-l1">Points</div></div>
+      <div class="rb-item"><div class="rb-val" id="rb-v2">–</div><div class="rb-lbl" id="rb-l2">Brut</div></div>
+      <div class="rb-item"><div class="rb-val" id="rb-v3">–</div><div class="rb-lbl" id="rb-l3">Proj.</div></div>
+      <div class="rb-item"><div class="rb-val" id="rb-v4">0/18</div><div class="rb-lbl">Trous</div></div>
+    </div>
+
     <!-- ── CLAVIER DE SAISIE ── -->
     <div class="card" style="padding:14px">
 
-      <!-- Score affiché en grand -->
-      <div class="score-display empty" id="score-big">–</div>
+      <!-- Score affiché en grand avec flèches de navigation -->
+      <div class="score-nav-row">
+        <button class="nav-arrow" id="arr-prev" ontouchstart="" onclick="prevHole()" disabled>‹</button>
+        <div class="score-display empty" id="score-big">–</div>
+        <button class="nav-arrow" id="arr-next" ontouchstart="" onclick="nextHole()">›</button>
+      </div>
 
       <!-- Aperçu résultat -->
       <div class="pts-preview prev-empty" id="pts-prev">Touchez votre score</div>
@@ -860,6 +900,12 @@ function renderHole(i) {
   document.getElementById('btn-next').textContent = i<17?'Suivant →':'🏁 Résultats';
   document.getElementById('swipe-hint').style.display = i>=2?'none':'';
 
+  // Flèches de navigation gauche/droite
+  const ap = document.getElementById('arr-prev');
+  const an = document.getElementById('arr-next');
+  if (ap) ap.disabled = (i===0);
+  if (an) { an.textContent = i<17?'›':'🏁'; an.style.fontSize = i<17?'2rem':'1.1rem'; }
+
   // Restaure le score saisi
   const saved = S.scores[i];
   S.extOpen = false;
@@ -869,6 +915,19 @@ function renderHole(i) {
   } else {
     closeExtKbd();
     renderKeypadSelection(saved);
+  }
+
+  // Réinitialise l'affichage du score (tiret si trou non saisi)
+  const bd = document.getElementById('score-big');
+  const pp = document.getElementById('pts-prev');
+  if (saved===null) {
+    bd.textContent='–'; bd.className='score-display empty';
+    pp.className='pts-preview prev-empty'; pp.textContent='Touchez votre score';
+  } else if (saved<9) {
+    bd.textContent=saved; bd.className='score-display';
+    updatePreview(saved);
+  } else {
+    bd.textContent=saved; bd.className='score-display';
   }
 }
 
@@ -1012,6 +1071,28 @@ function updateStrip() {
     document.getElementById('st-b').textContent = n>0 ? gross : '–';
     document.getElementById('st-c').textContent = pts+(18-n)*2;
   }
+
+  // Barre de score total en cours
+  const rb = document.getElementById('running-bar');
+  if (!rb) return;
+  rb.className = n>0 ? 'running-bar' : 'running-bar empty';
+  if (S.mode==='stroke') {
+    const vpStr = n>0 ? (vspar===0?'E':vspar>0?`+${vspar}`:vspar) : '–';
+    document.getElementById('rb-v1').textContent = n>0 ? gross : '–';
+    document.getElementById('rb-l1').textContent = 'Brut';
+    document.getElementById('rb-v2').textContent = n>0 ? net   : '–';
+    document.getElementById('rb-l2').textContent = 'Net';
+    document.getElementById('rb-v3').textContent = vpStr;
+    document.getElementById('rb-l3').textContent = 'vs Par';
+  } else {
+    document.getElementById('rb-v1').textContent = pts;
+    document.getElementById('rb-l1').textContent = 'Points';
+    document.getElementById('rb-v2').textContent = n>0 ? gross : '–';
+    document.getElementById('rb-l2').textContent = 'Brut';
+    document.getElementById('rb-v3').textContent = pts+(18-n)*2;
+    document.getElementById('rb-l3').textContent = 'Proj.';
+  }
+  document.getElementById('rb-v4').textContent = n+'/18';
 }
 
 /* ═══════════════════════════════════════════════
