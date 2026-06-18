@@ -3,366 +3,485 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-
-  <!-- ── PWA / iOS ── -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Golf Stableford">
   <link rel="apple-touch-icon" href="./icon-180.png">
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#1a5c2a">
-  <meta name="mobile-web-app-capable" content="yes">
-
-  <title>Golf du Clou – Stableford</title>
+  <title>Golf du Clou</title>
   <style>
-    /* ══════════════════════════════════════════
-       Variables & reset
-    ══════════════════════════════════════════ */
-    :root {
-      --gd:  #1a5c2a; --gm: #2e7d46; --gl: #4caf72;
-      --gold:#c8a832; --bg: #f4f8f4; --card:#ffffff;
-      --txt: #1c2b1e; --mut:#6b8070; --red: #c62828;
-      --blu: #1565c0; --rad:14px;
-      --sat: env(safe-area-inset-top,    0px);
-      --sab: env(safe-area-inset-bottom, 0px);
-      --sal: env(safe-area-inset-left,   0px);
-      --sar: env(safe-area-inset-right,  0px);
-    }
-    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
-    html { overscroll-behavior:none; height:100%; }
-    body {
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-      background:var(--bg); color:var(--txt); min-height:100%;
-      -webkit-user-select:none; user-select:none;
-      -webkit-font-smoothing:antialiased;
-    }
-    input,textarea { -webkit-user-select:text; user-select:text; }
+/* ═══════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════ */
+:root {
+  --gd:  #1a5c2a;  --gm: #2e7d46;  --gl: #4caf72;
+  --gold:#c8a832;  --bg: #f4f8f4;  --card:#ffffff;
+  --txt: #1c2b1e;  --mut:#6b8070;  --red: #c62828;
+  --blu: #1565c0;  --ora:#e65100;
+  --rad: 14px;
+  --sat: env(safe-area-inset-top,    0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left,   0px);
+  --sar: env(safe-area-inset-right,  0px);
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { overscroll-behavior:none; height:100%; }
+body {
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg); color:var(--txt); min-height:100%;
+  -webkit-user-select:none; user-select:none;
+  -webkit-font-smoothing:antialiased;
+}
+input,textarea { -webkit-user-select:text; user-select:text; }
 
-    /* ══════════════════════════════════════════
-       Header
-    ══════════════════════════════════════════ */
-    header {
-      background:linear-gradient(135deg,var(--gd),var(--gm));
-      color:#fff;
-      padding:calc(14px + var(--sat)) 16px 14px;
-      text-align:center; position:sticky; top:0; z-index:100;
-      box-shadow:0 2px 10px rgba(0,0,0,.28);
-    }
-    header h1 { font-size:1.15rem; font-weight:700; letter-spacing:.4px; }
-    header p  { font-size:.78rem; opacity:.85; margin-top:2px; }
-    .pbar  { background:rgba(255,255,255,.22); border-radius:10px; height:5px; margin-top:8px; }
-    .pfill { height:100%; border-radius:10px; background:var(--gold); transition:width .35s ease; }
+/* ═══════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════ */
+header {
+  background:linear-gradient(135deg,var(--gd),var(--gm)); color:#fff;
+  padding:calc(12px + var(--sat)) 16px 12px;
+  text-align:center; position:sticky; top:0; z-index:100;
+  box-shadow:0 2px 10px rgba(0,0,0,.28);
+}
+header h1 { font-size:1.1rem; font-weight:700; letter-spacing:.3px; }
+header p  { font-size:.76rem; opacity:.85; margin-top:1px; }
+.pbar  { background:rgba(255,255,255,.22); border-radius:10px; height:5px; margin-top:7px; }
+.pfill { height:100%; border-radius:10px; background:var(--gold); transition:width .35s ease; }
 
-    /* ══════════════════════════════════════════
-       Screens
-    ══════════════════════════════════════════ */
-    .screen { display:none; padding:14px; max-width:500px; margin:0 auto; }
-    .screen.active { display:block; }
+/* ═══════════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════════ */
+.screen { display:none; padding:12px calc(12px + var(--sal)); max-width:500px; margin:0 auto; }
+.screen.active { display:block; }
+.top-sp    { height:12px; }
+.bottom-sp { height:calc(86px + var(--sab)); }
 
-    /* ══════════════════════════════════════════
-       Modal installation
-    ══════════════════════════════════════════ */
-    .modal-overlay {
-      display:none; position:fixed; inset:0; z-index:999;
-      background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
-      align-items:flex-end; padding-bottom:var(--sab);
-    }
-    .modal-overlay.open { display:flex; }
-    .modal-box {
-      background:#fff; border-radius:20px 20px 0 0; width:100%;
-      padding:24px 20px calc(20px + var(--sab)); max-height:90vh; overflow-y:auto;
-    }
-    .modal-box h2 { font-size:1.1rem; color:var(--gd); margin-bottom:16px; text-align:center; }
-    .install-step {
-      display:flex; align-items:flex-start; gap:14px; margin-bottom:16px;
-    }
-    .step-num {
-      width:32px; height:32px; border-radius:50%; background:var(--gd); color:#fff;
-      font-size:.9rem; font-weight:800; display:flex; align-items:center;
-      justify-content:center; flex-shrink:0;
-    }
-    .step-text { font-size:.88rem; line-height:1.55; color:var(--txt); }
-    .step-text strong { color:var(--gd); }
-    .step-img {
-      background:#f4f8f4; border-radius:10px; padding:10px;
-      margin-top:6px; font-size:.8rem; color:var(--mut);
-      display:flex; align-items:center; gap:8px;
-    }
-    .step-icon { font-size:1.5rem; }
-    .modal-close {
-      width:100%; padding:14px; border:none; border-radius:12px;
-      background:var(--gd); color:#fff; font-size:1rem; font-weight:700;
-      cursor:pointer; margin-top:8px; touch-action:manipulation;
-      -webkit-tap-highlight-color:transparent;
-    }
-    .modal-close:active { background:#134520; }
+/* ═══════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════ */
+.card {
+  background:var(--card); border-radius:var(--rad);
+  box-shadow:0 2px 12px rgba(0,0,0,.09); padding:16px; margin-bottom:12px;
+}
+.card h2 { font-size:.92rem; color:var(--gd); margin-bottom:11px; font-weight:700; }
 
-    /* ══════════════════════════════════════════
-       Cards
-    ══════════════════════════════════════════ */
-    .card {
-      background:var(--card); border-radius:var(--rad);
-      box-shadow:0 2px 12px rgba(0,0,0,.10); padding:18px; margin-bottom:14px;
-    }
-    .card h2 { font-size:.95rem; color:var(--gd); margin-bottom:12px; font-weight:700; }
+/* ═══════════════════════════════════════════════
+   MODE DE JEU
+═══════════════════════════════════════════════ */
+.mode-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.mode-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:5px; padding:16px 8px; border-radius:12px;
+  border:2.5px solid #d0ddd4; background:#f8faf8; cursor:pointer;
+  min-height:90px; transition:all .15s;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.mode-btn .m-icon { font-size:2rem; }
+.mode-btn .m-name { font-size:.95rem; font-weight:800; color:var(--txt); }
+.mode-btn .m-desc { font-size:.72rem; color:var(--mut); }
+.mode-btn.selected[data-mode="stableford"] {
+  border-color:var(--gd); background:#e8f5e9;
+}
+.mode-btn.selected[data-mode="stroke"] {
+  border-color:var(--blu); background:#e3f2fd;
+}
+.mode-btn.selected .m-name { color:var(--gd); }
+.mode-btn.selected[data-mode="stroke"] .m-name { color:var(--blu); }
 
-    /* ══════════════════════════════════════════
-       Status offline / installé
-    ══════════════════════════════════════════ */
-    #status-bar {
-      display:flex; gap:8px; align-items:center; justify-content:center;
-      padding:6px 12px; border-radius:20px; font-size:.75rem; font-weight:600;
-      margin-bottom:12px; transition:all .3s;
-    }
-    #status-bar.offline  { background:#ffebee; color:var(--red); }
-    #status-bar.online   { background:#e8f5e9; color:var(--gd); }
-    #status-bar.installed{ background:#e8f5e9; color:var(--gd); }
+/* ═══════════════════════════════════════════════
+   COULEURS DE DÉPART
+═══════════════════════════════════════════════ */
+.tee-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:10px; }
+.tee-btn {
+  padding:12px 4px; border-radius:10px; border:2.5px solid transparent;
+  font-size:.85rem; font-weight:700; cursor:pointer;
+  background:#f0f4f1; color:var(--txt); text-align:center; min-height:48px;
+  transition:all .15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.tee-btn[data-tee="Noire"] { color:#111; background:#e8e8e8; }
+.tee-btn[data-tee="Blanc"] { color:#555; background:#f9f9f9; }
+.tee-btn[data-tee="Jaune"] { color:#c8a000; background:#fffae6; }
+.tee-btn[data-tee="Bleu"]  { color:#1565c0; background:#e3f2fd; }
+.tee-btn[data-tee="Rouge"] { color:#c62828; background:#ffebee; }
+.tee-btn[data-tee="Noire"].selected { background:#333; color:#fff; border-color:#333; }
+.tee-btn[data-tee="Blanc"].selected { background:#e0e0e0; color:#222; border-color:#bbb; }
+.tee-btn[data-tee="Jaune"].selected { background:#f9c800; color:#333; border-color:#c8a000; }
+.tee-btn[data-tee="Bleu"].selected  { background:#1976d2; color:#fff; border-color:#1565c0; }
+.tee-btn[data-tee="Rouge"].selected { background:#d32f2f; color:#fff; border-color:#c62828; }
 
-    /* ══════════════════════════════════════════
-       Inputs – 16px minimum (évite zoom iOS)
-    ══════════════════════════════════════════ */
-    label {
-      display:block; font-size:.85rem; color:var(--mut);
-      margin-bottom:5px; font-weight:600;
-    }
-    input[type=number],input[type=text],input[type=tel],select {
-      width:100%; padding:13px 14px; border:1.5px solid #d0ddd4;
-      border-radius:10px; font-size:16px; color:var(--txt); background:#fff;
-      margin-bottom:14px; -webkit-appearance:none; appearance:none;
-      touch-action:manipulation;
-    }
-    input:focus,select:focus {
-      outline:none; border-color:var(--gm);
-      box-shadow:0 0 0 3px rgba(46,125,70,.18);
-    }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
+/* ═══════════════════════════════════════════════
+   GENRE
+═══════════════════════════════════════════════ */
+.gender-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.gender-btn {
+  padding:12px; border-radius:10px; border:2.5px solid #d0ddd4;
+  font-size:.92rem; font-weight:600; cursor:pointer; background:#f0f4f1;
+  text-align:center; min-height:48px; transition:all .15s;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.gender-btn.selected { border-color:var(--gm); background:var(--gm); color:#fff; }
 
-    /* ══════════════════════════════════════════
-       Boutons départ & genre
-    ══════════════════════════════════════════ */
-    .tee-grid   { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
-    .gender-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
-    .tee-btn,.gender-btn {
-      padding:14px 6px; border-radius:10px; border:2.5px solid transparent;
-      font-size:.88rem; font-weight:700; cursor:pointer;
-      background:#f0f4f1; color:var(--txt); text-align:center;
-      min-height:50px; transition:all .15s;
-      touch-action:manipulation; -webkit-tap-highlight-color:transparent;
-    }
-    .gender-btn { border-color:#d0ddd4; }
-    .tee-btn[data-tee="Noire"] { color:#111; background:#e8e8e8; }
-    .tee-btn[data-tee="Blanc"] { color:#555; background:#f9f9f9; }
-    .tee-btn[data-tee="Jaune"] { color:#c8a000; background:#fffae6; }
-    .tee-btn[data-tee="Bleu"]  { color:#1565c0; background:#e3f2fd; }
-    .tee-btn[data-tee="Rouge"] { color:#c62828; background:#ffebee; }
-    .tee-btn[data-tee="Noire"].selected { background:#333; color:#fff; border-color:#333; }
-    .tee-btn[data-tee="Blanc"].selected { background:#e0e0e0; color:#222; border-color:#bbb; }
-    .tee-btn[data-tee="Jaune"].selected { background:#f9c800; color:#333; border-color:#c8a000; }
-    .tee-btn[data-tee="Bleu"].selected  { background:#1976d2; color:#fff; border-color:#1565c0; }
-    .tee-btn[data-tee="Rouge"].selected { background:#d32f2f; color:#fff; border-color:#c62828; }
-    .gender-btn.selected { border-color:var(--gm); background:var(--gm); color:#fff; }
+/* ═══════════════════════════════════════════════
+   INPUTS – 16px min (empêche zoom iOS)
+═══════════════════════════════════════════════ */
+label { display:block; font-size:.83rem; color:var(--mut); margin-bottom:4px; font-weight:600; }
+input[type=number],input[type=text],input[type=tel] {
+  width:100%; padding:12px 14px; border:1.5px solid #d0ddd4; border-radius:10px;
+  font-size:16px; color:var(--txt); background:#fff; margin-bottom:12px;
+  -webkit-appearance:none; appearance:none; touch-action:manipulation;
+}
+input:focus { outline:none; border-color:var(--gm); box-shadow:0 0 0 3px rgba(46,125,70,.15); }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 
-    /* ══════════════════════════════════════════
-       Boutons principaux
-    ══════════════════════════════════════════ */
-    .btn {
-      display:block; width:100%; padding:16px; border:none; border-radius:12px;
-      cursor:pointer; font-size:1rem; font-weight:700; text-align:center;
-      min-height:52px; transition:background .15s;
-      touch-action:manipulation; -webkit-tap-highlight-color:transparent;
-    }
-    .btn-primary   { background:var(--gd); color:#fff; }
-    .btn-primary:active  { background:#134520; }
-    .btn-secondary { background:#e8f0eb; color:var(--gd); }
-    .btn-secondary:active { background:#d4e5d8; }
-    .btn:disabled  { opacity:.4; cursor:not-allowed; }
-    .btn-install   { background:linear-gradient(135deg,#1565c0,#1976d2); color:#fff; margin-bottom:10px; }
-    .btn-install:active { background:#0d47a1; }
+/* ═══════════════════════════════════════════════
+   BOUTONS PRINCIPAUX
+═══════════════════════════════════════════════ */
+.btn {
+  display:block; width:100%; padding:15px; border:none; border-radius:12px;
+  cursor:pointer; font-size:1rem; font-weight:700; text-align:center; min-height:50px;
+  transition:background .15s; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.btn-primary  { background:var(--gd); color:#fff; }
+.btn-primary:active  { background:#134520; }
+.btn-secondary{ background:#e8f0eb; color:var(--gd); }
+.btn-secondary:active { background:#d4e5d8; }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+.btn-install  { background:linear-gradient(135deg,#1565c0,#1976d2); color:#fff; margin-bottom:10px; }
 
-    /* ══════════════════════════════════════════
-       Bandeau HCP
-    ══════════════════════════════════════════ */
-    .hcp-banner {
-      background:linear-gradient(90deg,#e8f5e9,#f1f8e9);
-      border-left:4px solid var(--gl); border-radius:10px;
-      padding:12px 14px; margin-bottom:12px;
-      font-size:.85rem; color:var(--gd);
-    }
-    .sbadge {
-      display:inline-flex; align-items:center; justify-content:center;
-      width:24px; height:24px; background:var(--gold); color:#fff;
-      border-radius:50%; font-size:.72rem; font-weight:800; margin-left:4px;
-    }
+/* ═══════════════════════════════════════════════
+   STATUS & INSTALL BANNER
+═══════════════════════════════════════════════ */
+#status-bar {
+  display:flex; gap:8px; align-items:center; justify-content:center;
+  padding:5px 12px; border-radius:20px; font-size:.73rem; font-weight:600;
+  margin-bottom:10px;
+}
+#status-bar.offline  { background:#ffebee; color:var(--red); }
+#status-bar.online   { background:#e8f5e9; color:var(--gd); }
+#status-bar.installed{ background:#e8f5e9; color:var(--gd); }
 
-    /* ══════════════════════════════════════════
-       En-tête trou
-    ══════════════════════════════════════════ */
-    .hole-header {
-      background:var(--gd); color:#fff; border-radius:12px;
-      padding:14px 16px; margin-bottom:12px;
-      display:grid; grid-template-columns:1fr 1fr 1fr 1fr; text-align:center;
-    }
-    .hole-num { font-size:2rem; font-weight:900; line-height:1; }
+/* ═══════════════════════════════════════════════
+   MODAL INSTALLATION
+═══════════════════════════════════════════════ */
+.modal-overlay {
+  display:none; position:fixed; inset:0; z-index:999;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(4px);
+  align-items:flex-end;
+}
+.modal-overlay.open { display:flex; }
+.modal-box {
+  background:#fff; border-radius:20px 20px 0 0; width:100%;
+  padding:22px 18px calc(18px + var(--sab)); max-height:88vh; overflow-y:auto;
+}
+.modal-box h2 { font-size:1.05rem; color:var(--gd); margin-bottom:14px; text-align:center; }
+.install-step { display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+.step-num {
+  width:30px; height:30px; border-radius:50%; background:var(--gd); color:#fff;
+  font-size:.85rem; font-weight:800; display:flex; align-items:center;
+  justify-content:center; flex-shrink:0; margin-top:2px;
+}
+.step-text { font-size:.86rem; line-height:1.5; color:var(--txt); }
+.step-text strong { color:var(--gd); }
+.step-chip {
+  display:inline-flex; align-items:center; gap:6px;
+  background:#f4f8f4; border-radius:8px; padding:7px 10px;
+  margin-top:5px; font-size:.78rem; color:var(--mut);
+}
+.modal-close {
+  width:100%; padding:14px; border:none; border-radius:12px;
+  background:var(--gd); color:#fff; font-size:.98rem; font-weight:700;
+  cursor:pointer; margin-top:6px; touch-action:manipulation;
+}
+.modal-close:active { background:#134520; }
 
-    /* ══════════════════════════════════════════
-       Stepper score
-    ══════════════════════════════════════════ */
-    .stepper {
-      display:flex; align-items:stretch;
-      border:1.5px solid #d0ddd4; border-radius:12px; overflow:hidden; background:#fff;
-      margin-bottom:10px;
-    }
-    .stepper button {
-      width:64px; min-height:64px; border:none; cursor:pointer;
-      font-size:2rem; font-weight:300; background:#f0f4f1; color:var(--gd);
-      flex-shrink:0; display:flex; align-items:center; justify-content:center;
-      touch-action:manipulation; -webkit-tap-highlight-color:transparent; transition:background .1s;
-    }
-    .stepper button:active { background:#d4e5d8; }
-    .stepper input {
-      flex:1; min-height:64px; border:none; text-align:center;
-      font-size:2rem; font-weight:800; padding:0; background:#fff; color:var(--txt);
-    }
-    .stepper input:focus { outline:none; }
+/* ═══════════════════════════════════════════════
+   EN-TÊTE DE TROU
+═══════════════════════════════════════════════ */
+.hole-card {
+  background:linear-gradient(160deg,var(--gd),var(--gm));
+  color:#fff; border-radius:14px; padding:16px 16px 13px;
+  margin-bottom:10px; overflow:hidden; position:relative;
+}
+/* Grand chiffre fantôme décoratif en arrière-plan */
+.hole-card::after {
+  content:attr(data-n);
+  position:absolute; right:-8px; top:-16px;
+  font-size:9rem; font-weight:900; line-height:1;
+  opacity:.07; pointer-events:none; user-select:none;
+}
+/* Ligne haute : numéro + demi-parcours */
+.hole-top {
+  display:flex; justify-content:space-between; align-items:flex-start;
+}
+/* Numéro de trou */
+.hole-num-wrap { display:flex; align-items:baseline; gap:5px; }
+.hole-lbl  { font-size:.68rem; opacity:.65; text-transform:uppercase;
+             letter-spacing:1.8px; font-weight:600; margin-bottom:1px; }
+.hole-big  { font-size:5rem; font-weight:900; line-height:.95; }
+.hole-of18 { font-size:1.15rem; font-weight:700; opacity:.65; }
+/* Demi (Aller / Retour) + progression */
+.hole-half {
+  text-align:right; font-size:.85rem; font-weight:700; opacity:.9;
+}
+.hole-half small { display:block; font-size:.68rem; opacity:.6; font-weight:400; margin-top:2px; }
+/* Grille Par / Index / Dist */
+.hole-meta-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  margin-top:10px; padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.18);
+}
+.hole-meta-item { text-align:center; }
+.hml { font-size:.62rem; opacity:.6; text-transform:uppercase; letter-spacing:.4px; }
+.hmv { font-size:1.1rem; font-weight:800; margin-top:1px; }
+/* Ligne Hcp de jeu / coups reçus */
+.hole-hcp-row {
+  margin-top:9px; padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.15);
+  font-size:.8rem; display:flex; justify-content:center;
+  gap:10px; flex-wrap:wrap; opacity:.92;
+}
+.hole-hcp-row strong { font-size:.88rem; }
+.sbadge {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; background:var(--gold); color:#fff;
+  border-radius:50%; font-size:.7rem; font-weight:800; margin-left:3px; vertical-align:middle;
+}
 
-    /* ══════════════════════════════════════════
-       Aperçu points
-    ══════════════════════════════════════════ */
-    .pts-preview {
-      text-align:center; padding:12px; border-radius:10px; margin-bottom:12px;
-      font-size:1rem; font-weight:700; transition:all .2s;
-    }
-    .p0{background:#ffebee;color:#c62828} .p1{background:#fff8e1;color:#e65100}
-    .p2{background:#e8f5e9;color:#2e7d32} .p3{background:#e3f2fd;color:#1565c0}
-    .p4{background:#f3e5f5;color:#6a1b9a} .p5{background:#fce4ec;color:#880e4f}
-    .swipe-hint { text-align:center; font-size:.75rem; color:var(--mut); margin-bottom:10px; }
+/* ═══════════════════════════════════════════════
+   CLAVIER 9 TOUCHES
+═══════════════════════════════════════════════ */
+.keypad-wrap { margin-bottom:10px; }
 
-    /* ══════════════════════════════════════════
-       Barre basse (safe area)
-    ══════════════════════════════════════════ */
-    .strip {
-      position:fixed; bottom:0; left:0; right:0; z-index:200;
-      background:var(--gd); color:#fff;
-      padding:10px 16px calc(10px + var(--sab));
-      display:none; justify-content:space-around; align-items:center;
-      box-shadow:0 -2px 12px rgba(0,0,0,.22);
-    }
-    .strip div { text-align:center; }
-    .sv { font-size:1.3rem; font-weight:800; line-height:1; }
-    .sl { font-size:.62rem; opacity:.8; margin-top:1px; }
-    .bottom-sp { height:calc(90px + var(--sab)); }
-    .top-sp    { height:14px; }
+/* Affichage du score courant au-dessus du clavier */
+.score-display {
+  text-align:center; margin-bottom:8px;
+  font-size:3.2rem; font-weight:900; line-height:1;
+  color:var(--gd); min-height:3.6rem;
+  transition:all .15s;
+}
+.score-display.empty { color:#d0ddd4; }
 
-    /* ══════════════════════════════════════════
-       Résumé
-    ══════════════════════════════════════════ */
-    .sum-hdr {
-      background:linear-gradient(135deg,var(--gd),var(--gm)); color:#fff;
-      border-radius:var(--rad); padding:24px 20px; margin-bottom:14px; text-align:center;
-    }
-    .sum-hdr h2 { font-size:1.2rem; margin-bottom:8px; }
-    .sum-pts    { font-size:3.2rem; font-weight:900; line-height:1; }
-    .sum-lbl    { font-size:.82rem; opacity:.85; margin-top:4px; }
-    .stat-row {
-      display:flex; justify-content:space-between; align-items:center;
-      padding:10px 0; border-bottom:1px solid #eef2ef; font-size:.88rem;
-    }
-    .stat-row:last-child { border-bottom:none; }
-    .stat-lbl { color:var(--mut); } .stat-val { font-weight:700; }
-    .idx-box {
-      background:linear-gradient(90deg,#fff8e1,#fff3cd); border:2px solid var(--gold);
-      border-radius:12px; padding:16px; text-align:center; margin:12px 0;
-    }
-    .idx-lbl { font-size:.8rem; color:var(--mut); margin-bottom:4px; }
-    .idx-val  { font-size:2rem; font-weight:900; color:var(--gd); }
-    .idx-note { font-size:.72rem; color:var(--mut); margin-top:4px; }
-    .scgrid   { width:100%; border-collapse:collapse; font-size:.8rem; margin-top:8px; }
-    .scgrid th { background:var(--gd); color:#fff; padding:8px 4px; text-align:center; }
-    .scgrid td { padding:7px 4px; text-align:center; border-bottom:1px solid #eef2ef; }
-    .scgrid tr:nth-child(even) td { background:#f8fcf8; }
-    .pc { font-weight:700; }
-    .pc.p0{color:var(--red)} .pc.p1{color:#e65100}
-    .pc.p2{color:var(--gm)}  .pc.p3{color:var(--blu)} .pc.p4{color:#6a1b9a}
-    .tr td { background:#e8f5e9; font-weight:700; }
+/* Grille 3×3 */
+.key-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px;
+}
+.key-btn {
+  height:60px; border:2.5px solid #d0ddd4; border-radius:12px;
+  background:#fff; color:var(--txt);
+  font-size:1.55rem; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .12s;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.key-btn:active { transform:scale(.94); }
 
-    @media print {
-      header,.strip,.btn,.modal-overlay,#status-bar { display:none!important; }
-      .screen { display:block!important; }
-      .card { box-shadow:none; border:1px solid #ccc; }
-    }
+/* Score sélectionné : couleur selon résultat */
+.key-btn.sel-eagle  { background:#6a1b9a; border-color:#6a1b9a; color:#fff; }
+.key-btn.sel-birdie { background:var(--blu); border-color:var(--blu); color:#fff; }
+.key-btn.sel-par    { background:var(--gd); border-color:var(--gd); color:#fff; }
+.key-btn.sel-bogey  { background:var(--ora); border-color:var(--ora); color:#fff; }
+.key-btn.sel-bad    { background:var(--red); border-color:var(--red); color:#fff; }
+.key-btn.sel-neutral{ background:var(--gd); border-color:var(--gd); color:#fff; }
+
+/* Bouton 9+ */
+.key-9plus { font-size:1.2rem; background:#f4f8f4; color:var(--gd); font-weight:800; }
+.key-9plus.active { background:var(--gold); border-color:var(--gold); color:#fff; }
+
+/* ═══════════════════════════════════════════════
+   CLAVIER ÉTENDU (score ≥ 9)
+═══════════════════════════════════════════════ */
+#keypad-ext { display:none; }
+#keypad-ext.open { display:block; }
+
+.ext-header {
+  text-align:center; font-size:.78rem; color:var(--mut); font-weight:600;
+  margin-bottom:8px; letter-spacing:.3px; text-transform:uppercase;
+}
+.ext-stepper {
+  display:flex; align-items:stretch; border:2px solid #d0ddd4;
+  border-radius:14px; overflow:hidden; margin-bottom:8px;
+}
+.ext-stepper button {
+  width:70px; min-height:70px; border:none; background:#f0f4f1;
+  font-size:2rem; font-weight:300; color:var(--gd); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  transition:background .1s;
+}
+.ext-stepper button:active { background:#d4e5d8; }
+.ext-val {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  font-size:2.6rem; font-weight:900; color:var(--gd); background:#fff;
+}
+.btn-back-kbd {
+  width:100%; padding:11px; border:2px solid #d0ddd4; border-radius:10px;
+  background:#f8faf8; color:var(--mut); font-size:.85rem; font-weight:600;
+  cursor:pointer; margin-bottom:8px;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+.btn-back-kbd:active { background:#e8f0eb; }
+
+/* ═══════════════════════════════════════════════
+   APERÇU DU RÉSULTAT
+═══════════════════════════════════════════════ */
+.pts-preview {
+  text-align:center; padding:10px 12px; border-radius:10px; margin-bottom:10px;
+  font-size:.95rem; font-weight:700; transition:all .2s; min-height:42px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.prev-empty   { background:#f4f8f4; color:var(--mut); }
+.prev-eagle   { background:#f3e5f5; color:#6a1b9a; }
+.prev-birdie  { background:#e3f2fd; color:var(--blu); }
+.prev-par     { background:#e8f5e9; color:#2e7d32; }
+.prev-bogey   { background:#fff8e1; color:var(--ora); }
+.prev-bad     { background:#ffebee; color:var(--red); }
+
+/* ═══════════════════════════════════════════════
+   INDICATEUR SWIPE & NAV
+═══════════════════════════════════════════════ */
+.swipe-hint { text-align:center; font-size:.72rem; color:var(--mut); margin-bottom:8px; }
+.nav-btns   { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+
+/* ═══════════════════════════════════════════════
+   BARRE BASSE (safe area)
+═══════════════════════════════════════════════ */
+.strip {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  background:var(--gd); color:#fff;
+  padding:9px 14px calc(9px + var(--sab));
+  display:none; justify-content:space-around; align-items:center;
+  box-shadow:0 -2px 12px rgba(0,0,0,.22);
+}
+.strip > div { text-align:center; }
+.sv { font-size:1.25rem; font-weight:800; line-height:1; }
+.sl { font-size:.6rem; opacity:.8; margin-top:1px; }
+
+/* ═══════════════════════════════════════════════
+   RÉSUMÉ
+═══════════════════════════════════════════════ */
+.sum-hdr {
+  background:linear-gradient(135deg,var(--gd),var(--gm)); color:#fff;
+  border-radius:var(--rad); padding:22px 18px; margin-bottom:12px; text-align:center;
+}
+.sum-hdr h2 { font-size:1.15rem; margin-bottom:6px; }
+.sum-pts    { font-size:3rem; font-weight:900; line-height:1; }
+.sum-lbl    { font-size:.8rem; opacity:.85; margin-top:3px; }
+.stat-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:9px 0; border-bottom:1px solid #eef2ef; font-size:.86rem;
+}
+.stat-row:last-child { border-bottom:none; }
+.stat-lbl { color:var(--mut); } .stat-val { font-weight:700; }
+.idx-box {
+  background:linear-gradient(90deg,#fff8e1,#fff3cd); border:2px solid var(--gold);
+  border-radius:12px; padding:14px; text-align:center; margin:10px 0;
+}
+.idx-lbl { font-size:.78rem; color:var(--mut); margin-bottom:3px; }
+.idx-val  { font-size:1.9rem; font-weight:900; color:var(--gd); }
+.idx-note { font-size:.7rem; color:var(--mut); margin-top:3px; }
+
+/* ═══════════════════════════════════════════════
+   CARTE DE SCORE
+═══════════════════════════════════════════════ */
+.scgrid { width:100%; border-collapse:collapse; font-size:.78rem; margin-top:6px; }
+.scgrid th { background:var(--gd); color:#fff; padding:7px 3px; text-align:center; font-weight:600; }
+.scgrid td { padding:6px 3px; text-align:center; border-bottom:1px solid #eef2ef; }
+.scgrid tr:nth-child(even) td { background:#f8fcf8; }
+.scgrid .tr td { background:#e8f5e9!important; font-weight:700; }
+.scgrid .tr-total td { background:#c8e6c9!important; font-weight:700; }
+/* Couleurs stroke-play vs par */
+.vpar { font-weight:700; }
+.vp-eagle{ color:#6a1b9a } .vp-birdie{ color:var(--blu) }
+.vp-par  { color:var(--gm) } .vp-bogey { color:var(--ora) }
+.vp-bad  { color:var(--red) }
+/* Couleurs stableford pts */
+.pc.p0{ color:var(--red) }  .pc.p1{ color:var(--ora) }
+.pc.p2{ color:var(--gm) }   .pc.p3{ color:var(--blu) }
+.pc.p4{ color:#6a1b9a }
+
+@media print {
+  header,.strip,.btn,.modal-overlay,#status-bar { display:none!important; }
+  .screen { display:block!important; }
+  .card { box-shadow:none; border:1px solid #ccc; }
+}
   </style>
 </head>
 <body>
 
-<!-- ══════════ MODAL INSTALLATION iOS ══════════ -->
+<!-- ══════ MODAL INSTALLATION ══════ -->
 <div class="modal-overlay" id="modal-install">
   <div class="modal-box">
-    <h2>📲 Installer l'app sur votre iPhone</h2>
-
+    <h2>📲 Installer sur votre iPhone</h2>
     <div class="install-step">
       <div class="step-num">1</div>
-      <div class="step-text">
-        Assurez-vous d'être dans <strong>Safari</strong>
-        (et non Chrome ou un autre navigateur).
-        <div class="step-img"><span class="step-icon">🧭</span>Safari – navigateur Apple</div>
+      <div class="step-text">Ouvrez cette page dans <strong>Safari</strong> (pas Chrome).
+        <div class="step-chip">🧭 Safari — navigateur Apple</div>
       </div>
     </div>
-
     <div class="install-step">
       <div class="step-num">2</div>
-      <div class="step-text">
-        Appuyez sur le bouton <strong>Partager ⎙</strong>
-        en bas de l'écran (le carré avec la flèche vers le haut).
-        <div class="step-img"><span class="step-icon">⎙</span>Bouton Partager – barre du bas</div>
+      <div class="step-text">Appuyez sur <strong>⎙ Partager</strong> (carré + flèche vers le haut, barre du bas).
+        <div class="step-chip">⎙ Bouton Partager</div>
       </div>
     </div>
-
     <div class="install-step">
       <div class="step-num">3</div>
-      <div class="step-text">
-        Faites défiler et tapez
-        <strong>« Sur l'écran d'accueil »</strong>.
-        <div class="step-img"><span class="step-icon">＋</span>Sur l'écran d'accueil</div>
+      <div class="step-text">Faites défiler et tapez <strong>« Sur l'écran d'accueil »</strong>, puis <strong>Ajouter</strong>.
+        <div class="step-chip">＋ Sur l'écran d'accueil</div>
       </div>
     </div>
-
     <div class="install-step">
       <div class="step-num">4</div>
-      <div class="step-text">
-        Appuyez sur <strong>Ajouter</strong> en haut à droite.
-        L'icône ⛳ apparaît sur votre écran d'accueil.
-        <strong>L'app fonctionne ensuite sans réseau !</strong>
+      <div class="step-text">L'icône ⛳ apparaît sur votre écran d'accueil.<br>
+        <strong>L'app fonctionne ensuite sans réseau sur le parcours.</strong>
       </div>
     </div>
-
-    <button class="modal-close" onclick="closeInstallModal()">
-      ✅ Compris – Commencer
-    </button>
+    <button class="modal-close" onclick="closeModal()">✅ Compris – Commencer</button>
   </div>
 </div>
 
-<!-- ══════════ HEADER ══════════ -->
+<!-- ══════ HEADER ══════ -->
 <header>
-  <h1>⛳ Golf du Clou – Stableford</h1>
-  <p id="header-sub">Configuration du parcours</p>
+  <h1>⛳ Golf du Clou</h1>
+  <p id="header-sub">Configuration</p>
   <div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div>
 </header>
 
-<!-- ══════════ ÉCRAN 1 : Configuration ══════════ -->
+<!-- ══════════════════════════════════════
+     ÉCRAN 1 : SETUP
+══════════════════════════════════════ -->
 <div id="screen-setup" class="screen active">
   <div class="top-sp"></div>
 
-  <!-- Statut connexion + bouton installer -->
   <div id="status-bar" class="online">
-    <span id="status-dot">🟢</span>
-    <span id="status-txt">En ligne · App prête hors réseau</span>
-    <span id="install-btn-small" onclick="showInstallModal()"
-          style="margin-left:auto;cursor:pointer;font-size:.8rem;color:var(--blu);display:none">
+    <span id="s-dot">🟢</span>
+    <span id="s-txt">En ligne · App prête hors réseau</span>
+    <span id="s-install" onclick="showModal()"
+      style="margin-left:auto;cursor:pointer;font-size:.78rem;color:var(--blu);display:none">
       📲 Installer
     </span>
   </div>
 
+  <!-- ① Mode de jeu -->
+  <div class="card">
+    <h2>🏆 Mode de jeu</h2>
+    <div class="mode-grid">
+      <button class="mode-btn" data-mode="stableford">
+        <span class="m-icon">🎯</span>
+        <span class="m-name">Stableford</span>
+        <span class="m-desc">Points par trou</span>
+      </button>
+      <button class="mode-btn" data-mode="stroke">
+        <span class="m-icon">📊</span>
+        <span class="m-name">Stroke-Play</span>
+        <span class="m-desc">Score total</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ② Couleur de départ -->
   <div class="card">
     <h2>🏌️ Couleur de départ</h2>
     <div class="tee-grid">
@@ -372,9 +491,10 @@
       <button class="tee-btn" data-tee="Bleu">🔵 Bleu</button>
       <button class="tee-btn" data-tee="Rouge">🔴 Rouge</button>
     </div>
-    <div id="tee-info" style="font-size:.8rem;color:var(--mut);text-align:center;min-height:18px"></div>
+    <div id="tee-info" style="font-size:.78rem;color:var(--mut);text-align:center;min-height:16px"></div>
   </div>
 
+  <!-- ③ Genre -->
   <div class="card">
     <h2>👤 Genre</h2>
     <div class="gender-grid">
@@ -383,9 +503,10 @@
     </div>
   </div>
 
+  <!-- ④ Index -->
   <div class="card">
-    <h2>🎯 Index actuel</h2>
-    <label for="inp-idx">Index WHS (ex : 18.4)</label>
+    <h2>🎯 Index WHS</h2>
+    <label for="inp-idx">Index actuel (ex : 18.4)</label>
     <input type="number" id="inp-idx" inputmode="decimal"
            min="-10" max="54" step="0.1" placeholder="ex : 18.4">
     <label for="inp-name">Nom du joueur (optionnel)</label>
@@ -393,50 +514,82 @@
            placeholder="Prénom Nom" autocomplete="name" style="margin-bottom:0">
   </div>
 
-  <button class="btn btn-install" id="btn-install-big" onclick="showInstallModal()" style="display:none">
+  <button class="btn btn-install" id="btn-install-big" onclick="showModal()" style="display:none">
     📲 Installer l'app sur iPhone
   </button>
-
   <button class="btn btn-primary" id="btn-start" disabled onclick="startRound()">
     Commencer le parcours →
   </button>
   <div class="bottom-sp"></div>
 </div>
 
-<!-- ══════════ ÉCRAN 2 : Saisie ══════════ -->
+<!-- ══════════════════════════════════════
+     ÉCRAN 2 : SAISIE DES SCORES
+══════════════════════════════════════ -->
 <div id="screen-scoring" class="screen">
   <div class="top-sp"></div>
   <div id="swipe-zone">
+
+    <!-- Info trou -->
     <div id="hole-display"></div>
+
+    <!-- ── CLAVIER DE SAISIE ── -->
     <div class="card" style="padding:14px">
-      <label style="font-size:.9rem;margin-bottom:8px;color:var(--txt);font-weight:600">
-        Score brut sur ce trou
-      </label>
-      <div class="stepper">
-        <button ontouchstart="" onclick="adjScore(-1)">−</button>
-        <input type="tel" id="score-inp" inputmode="numeric" pattern="[0-9]*"
-               placeholder="–" oninput="onScoreInput()" onfocus="onScoreFocus()">
-        <button ontouchstart="" onclick="adjScore(+1)">+</button>
+
+      <!-- Score affiché en grand -->
+      <div class="score-display empty" id="score-big">–</div>
+
+      <!-- Aperçu résultat -->
+      <div class="pts-preview prev-empty" id="pts-prev">Touchez votre score</div>
+
+      <!-- Grille 1–8 + 9+ -->
+      <div class="key-grid" id="keypad-main">
+        <button class="key-btn" data-v="1">1</button>
+        <button class="key-btn" data-v="2">2</button>
+        <button class="key-btn" data-v="3">3</button>
+        <button class="key-btn" data-v="4">4</button>
+        <button class="key-btn" data-v="5">5</button>
+        <button class="key-btn" data-v="6">6</button>
+        <button class="key-btn" data-v="7">7</button>
+        <button class="key-btn" data-v="8">8</button>
+        <button class="key-btn key-9plus" data-v="9plus">9+</button>
       </div>
-    </div>
-    <div class="pts-preview p2" id="pts-prev">Entrez votre score</div>
-    <div class="swipe-hint" id="swipe-hint">← Glissez pour naviguer entre les trous →</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+
+      <!-- Clavier étendu (score ≥ 9) -->
+      <div id="keypad-ext">
+        <div class="ext-header">Score ≥ 9</div>
+        <div class="ext-stepper">
+          <button ontouchstart="" onclick="adjExt(-1)">−</button>
+          <div class="ext-val" id="ext-val">9</div>
+          <button ontouchstart="" onclick="adjExt(+1)">+</button>
+        </div>
+        <button class="btn-back-kbd" onclick="backKbd()">← Retour aux touches 1 – 8</button>
+      </div>
+
+    </div><!-- /card -->
+
+    <!-- Hint swipe -->
+    <div class="swipe-hint" id="swipe-hint">← Glissez pour changer de trou →</div>
+
+    <!-- Navigation -->
+    <div class="nav-btns">
       <button class="btn btn-secondary" id="btn-prev" onclick="prevHole()">← Précédent</button>
       <button class="btn btn-primary"   id="btn-next" onclick="nextHole()">Suivant →</button>
     </div>
-  </div>
+  </div><!-- /swipe-zone -->
 
-  <!-- Barre basse -->
+  <!-- Barre fixe bas -->
   <div class="strip" id="strip">
-    <div><div class="sv" id="s-hole">1/18</div><div class="sl">Trou</div></div>
-    <div><div class="sv" id="s-pts">0</div><div class="sl">Points</div></div>
-    <div><div class="sv" id="s-gross">–</div><div class="sl">Brut</div></div>
-    <div><div class="sv" id="s-proj">36</div><div class="sl">Projection</div></div>
+    <div><div class="sv" id="st-hole">1/18</div><div class="sl">Trou</div></div>
+    <div><div class="sv" id="st-a">0</div><div class="sl" id="st-a-lbl">Points</div></div>
+    <div><div class="sv" id="st-b">–</div><div class="sl" id="st-b-lbl">Brut</div></div>
+    <div><div class="sv" id="st-c">36</div><div class="sl" id="st-c-lbl">Proj.</div></div>
   </div>
 </div>
 
-<!-- ══════════ ÉCRAN 3 : Résultats ══════════ -->
+<!-- ══════════════════════════════════════
+     ÉCRAN 3 : RÉSULTATS
+══════════════════════════════════════ -->
 <div id="screen-summary" class="screen">
   <div class="top-sp"></div>
   <div class="sum-hdr" id="sum-hdr"></div>
@@ -448,7 +601,7 @@
   <div class="card">
     <h2>📉 Impact sur l'index</h2>
     <div class="idx-box" id="idx-box"></div>
-    <div id="idx-expl" style="font-size:.8rem;color:var(--mut);line-height:1.6;margin-top:8px"></div>
+    <div id="idx-expl" style="font-size:.78rem;color:var(--mut);line-height:1.6;margin-top:8px"></div>
   </div>
   <button class="btn btn-secondary" style="margin-bottom:10px" onclick="newRound()">
     🔄 Nouveau parcours
@@ -458,82 +611,61 @@
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-//  SERVICE WORKER
-// ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   SERVICE WORKER
+═══════════════════════════════════════════════ */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then(r => {
-        console.log('[SW] Scope:', r.scope);
-        updateStatus();
-      })
-      .catch(e => console.warn('[SW] Erreur:', e));
+      .then(() => updateStatus())
+      .catch(e => console.warn('[SW]', e));
   });
 }
 
-// ══════════════════════════════════════════════
-//  STATUT EN LIGNE / HORS LIGNE
-// ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   STATUS / INSTALL
+═══════════════════════════════════════════════ */
 function updateStatus() {
-  const bar  = document.getElementById('status-bar');
-  const dot  = document.getElementById('status-dot');
-  const txt  = document.getElementById('status-txt');
-  const installed = ('standalone' in navigator) && navigator.standalone;
-
-  if (installed) {
-    bar.className = 'installed';
-    dot.textContent = '✅';
+  const bar = document.getElementById('status-bar');
+  const dot = document.getElementById('s-dot');
+  const txt = document.getElementById('s-txt');
+  const inst = ('standalone' in navigator) && navigator.standalone;
+  if (inst) {
+    bar.className = 'installed'; dot.textContent = '✅';
     txt.textContent = 'App installée · Mode hors réseau actif';
   } else if (navigator.onLine) {
-    bar.className = 'online';
-    dot.textContent = '🟢';
-    txt.textContent = 'En ligne · App prête hors réseau';
+    bar.className = 'online'; dot.textContent = '🟢';
+    txt.textContent = 'En ligne · Prête hors réseau';
   } else {
-    bar.className = 'offline';
-    dot.textContent = '🔴';
-    txt.textContent = 'Hors réseau · Données en cache ✓';
+    bar.className = 'offline'; dot.textContent = '🔴';
+    txt.textContent = 'Hors réseau · Cache actif ✓';
   }
 }
 window.addEventListener('online',  updateStatus);
 window.addEventListener('offline', updateStatus);
 updateStatus();
 
-// ══════════════════════════════════════════════
-//  DÉTECTION iOS & BOUTON INSTALLER
-// ══════════════════════════════════════════════
-function isIOSSafari() {
-  const ua = navigator.userAgent;
-  return /iphone|ipad|ipod/i.test(ua)
-      && /safari/i.test(ua)
-      && !/crios|fxios|opios|edgios/i.test(ua);
-}
-const isStandalone = ('standalone' in navigator) && navigator.standalone;
-
-if (isIOSSafari() && !isStandalone) {
-  document.getElementById('install-btn-small').style.display = 'inline';
-  document.getElementById('btn-install-big').style.display  = 'block';
-  // Affiche le modal automatiquement au 1er lancement
-  if (!localStorage.getItem('install-shown')) {
-    setTimeout(showInstallModal, 800);
-    localStorage.setItem('install-shown', '1');
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+           && /safari/i.test(navigator.userAgent)
+           && !/crios|fxios/i.test(navigator.userAgent);
+const isSA  = ('standalone' in navigator) && navigator.standalone;
+if (isIOS && !isSA) {
+  document.getElementById('s-install').style.display = 'inline';
+  document.getElementById('btn-install-big').style.display = 'block';
+  if (!localStorage.getItem('ios-shown')) {
+    setTimeout(showModal, 900);
+    localStorage.setItem('ios-shown', '1');
   }
 }
-
-function showInstallModal() {
-  document.getElementById('modal-install').classList.add('open');
-}
-function closeInstallModal() {
-  document.getElementById('modal-install').classList.remove('open');
-}
-// Ferme sur clic en dehors
-document.getElementById('modal-install').addEventListener('click', function(e) {
-  if (e.target === this) closeInstallModal();
+function showModal()  { document.getElementById('modal-install').classList.add('open'); }
+function closeModal() { document.getElementById('modal-install').classList.remove('open'); }
+document.getElementById('modal-install').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-install')) closeModal();
 });
 
-// ══════════════════════════════════════════════
-//  DONNÉES GOLF DU CLOU
-// ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   DONNÉES DU PARCOURS
+═══════════════════════════════════════════════ */
 const HOLES = [
   {par:4,hcp:13,Noire:262,Blanc:262,Jaune:248,Bleu:244,Rouge:225},
   {par:3,hcp:11,Noire:153,Blanc:153,Jaune:146,Bleu:140,Rouge:134},
@@ -561,244 +693,500 @@ const TEES = {
   Bleu: {sss:{M:63.5,F:67.9},  slope:{M:108,F:123},   par:67},
   Rouge:{sss:{M:62.0,F:66.0},  slope:{M:106,F:117},   par:67},
 };
-const PL = {
-  0:'❌ Hors-jeu net (0 pt)',1:'👍 Bogey net (1 pt)',2:'✅ Par net (2 pts)',
-  3:'🐦 Birdie net (3 pts)',4:'🦅 Eagle net (4 pts)',5:'🏆 Albatros net (5 pts)',
-};
 
-// ══════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
 let S = {
-  tee:null,gender:null,index:null,name:'',
-  playHcp:0,strokes:[],scores:new Array(18).fill(null),hole:0
+  mode:null,        // 'stableford' | 'stroke'
+  tee:null, gender:null, index:null, name:'',
+  playHcp:0, strokes:[], scores:new Array(18).fill(null), hole:0,
+  extOpen:false, extScore:9
 };
 
-// ══════════════════════════════════════════════
-//  SETUP
-// ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   SETUP LISTENERS
+═══════════════════════════════════════════════ */
+document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('selected'));
+  b.classList.add('selected'); S.mode = b.dataset.mode; checkReady();
+}));
 document.querySelectorAll('.tee-btn').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tee-btn').forEach(x => x.classList.remove('selected'));
-  b.classList.add('selected'); S.tee = b.dataset.tee;
-  updateTeeInfo(); checkReady();
+  b.classList.add('selected'); S.tee = b.dataset.tee; updateTeeInfo(); checkReady();
 }));
 document.querySelectorAll('.gender-btn').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.gender-btn').forEach(x => x.classList.remove('selected'));
-  b.classList.add('selected'); S.gender = b.dataset.gender;
-  updateTeeInfo(); checkReady();
+  b.classList.add('selected'); S.gender = b.dataset.gender; updateTeeInfo(); checkReady();
 }));
 document.getElementById('inp-idx').addEventListener('input', checkReady);
 
 function updateTeeInfo() {
   const el = document.getElementById('tee-info');
   if (!S.tee) { el.textContent=''; return; }
-  const td=TEES[S.tee], g=S.gender||'M';
+  const td = TEES[S.tee], g = S.gender||'M';
   if (td.sss[g]===null) {
-    el.innerHTML=`<span style="color:var(--red)">⚠️ Départ ${S.tee} non disponible pour les Dames</span>`;
+    el.innerHTML=`<span style="color:var(--red)">⚠️ Départ ${S.tee} non disponible Dames</span>`;
   } else {
     el.textContent=`SSS ${td.sss[g]} · Slope ${td.slope[g]} · Par 67`;
     el.style.color='var(--mut)';
   }
 }
-
 function checkReady() {
-  const v=parseFloat(document.getElementById('inp-idx').value);
-  const ok=S.tee&&S.gender&&!isNaN(v)&&v>=-10&&v<=54&&TEES[S.tee]?.sss[S.gender]!==null;
-  document.getElementById('btn-start').disabled=!ok;
+  const v = parseFloat(document.getElementById('inp-idx').value);
+  const ok = S.mode && S.tee && S.gender && !isNaN(v) && v>=-10 && v<=54
+           && TEES[S.tee]?.sss[S.gender]!==null;
+  document.getElementById('btn-start').disabled = !ok;
 }
 
-// ══════════════════════════════════════════════
-//  CALCULS WHS
-// ══════════════════════════════════════════════
-const playHcp=(idx,sss,slope,par)=>Math.round(idx*slope/113+(sss-par));
-
-const strokes=(ph)=>HOLES.map(h=>{
-  if(ph>=0) return (h.hcp<=ph?1:0)+(h.hcp<=ph-18?1:0);
+/* ═══════════════════════════════════════════════
+   CALCULS WHS
+═══════════════════════════════════════════════ */
+const calcPlayHcp = (idx,sss,slope,par) => Math.round(idx*slope/113+(sss-par));
+const calcStrokes = ph => HOLES.map(h => {
+  if (ph>=0) return (h.hcp<=ph?1:0)+(h.hcp<=ph-18?1:0);
   return h.hcp<=-ph?-1:0;
 });
-
-const sbPts=(gross,par,sk)=>gross?Math.max(0,par-(gross-sk)+2):null;
-
-const adjGross=(scores,sk)=>HOLES.reduce((sum,h,i)=>{
-  const cap=h.par+2+sk[i];
-  return sum+(scores[i]?Math.min(scores[i],cap):cap);
+const sbPts  = (g,par,sk) => g ? Math.max(0, par-(g-sk)+2) : null;
+const adjGross = (sc,sk) => HOLES.reduce((s,h,i)=>{
+  const cap=h.par+2+sk[i]; return s+(sc[i]?Math.min(sc[i],cap):cap);
 },0);
+const scoreDiff = (ag,sss,slope) => (ag-sss)*113/slope;
 
-const scoreDiff=(ag,sss,slope)=>(ag-sss)*113/slope;
-
-// ══════════════════════════════════════════════
-//  DÉMARRER
-// ══════════════════════════════════════════════
-function startRound() {
-  S.index  = parseFloat(document.getElementById('inp-idx').value);
-  S.name   = document.getElementById('inp-name').value.trim()||'Joueur';
-  const td = TEES[S.tee];
-  S.playHcp = playHcp(S.index,td.sss[S.gender],td.slope[S.gender],td.par);
-  S.strokes = strokes(S.playHcp);
-  S.scores  = new Array(18).fill(null);
-  S.hole    = 0;
-  showScreen('scoring'); renderHole(0); updateStrip();
+/* ═══════════════════════════════════════════════
+   LABELS RÉSULTAT
+═══════════════════════════════════════════════ */
+const SB_LABELS = {
+  0:'❌ Hors-jeu net', 1:'👍 Bogey net', 2:'✅ Par net',
+  3:'🐦 Birdie net', 4:'🦅 Eagle net', 5:'🏆 Albatros net'
+};
+function strokeLabel(diff) {
+  const M = {'-4':'🏅 Albatros','-3':'🏅 Albatros','-2':'🦅 Eagle',
+             '-1':'🐦 Birdie','0':'✅ Par','1':'👍 Bogey','2':'😅 Double','3':'😬 Triple'};
+  return M[diff.toString()] || (diff>0?`+${diff} bogeys`:`${diff}`);
+}
+function strokeVparClass(diff) {
+  if (diff<=-2) return 'vp-eagle';
+  if (diff===-1) return 'vp-birdie';
+  if (diff===0)  return 'vp-par';
+  if (diff===1)  return 'vp-bogey';
+  return 'vp-bad';
+}
+function strokeVparStr(diff) {
+  if (diff===0) return 'E';
+  return diff>0 ? `+${diff}` : `${diff}`;
 }
 
-// ══════════════════════════════════════════════
-//  NAVIGATION
-// ══════════════════════════════════════════════
-function showScreen(name) {
+/* ═══════════════════════════════════════════════
+   DÉMARRER LE PARCOURS
+═══════════════════════════════════════════════ */
+function startRound() {
+  S.index  = parseFloat(document.getElementById('inp-idx').value);
+  S.name   = document.getElementById('inp-name').value.trim() || 'Joueur';
+  const td = TEES[S.tee];
+  S.playHcp = calcPlayHcp(S.index, td.sss[S.gender], td.slope[S.gender], td.par);
+  S.strokes = calcStrokes(S.playHcp);
+  S.scores  = new Array(18).fill(null);
+  S.hole    = 0;
+  showScreen('scoring');
+  renderHole(0);
+  updateStrip();
+  // Configure strip labels selon mode
+  if (S.mode==='stroke') {
+    document.getElementById('st-a-lbl').textContent = 'Brut';
+    document.getElementById('st-b-lbl').textContent = 'Net';
+    document.getElementById('st-c-lbl').textContent = 'vs Par';
+  } else {
+    document.getElementById('st-a-lbl').textContent = 'Points';
+    document.getElementById('st-b-lbl').textContent = 'Brut';
+    document.getElementById('st-c-lbl').textContent = 'Proj.';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AFFICHAGE
+═══════════════════════════════════════════════ */
+function showScreen(n) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('screen-'+n).classList.add('active');
   document.getElementById('header-sub').textContent =
-    {setup:'Configuration',scoring:'Saisie du score',summary:'Résultats'}[name];
-  document.getElementById('strip').style.display = name==='scoring'?'flex':'none';
+    {setup:'Configuration', scoring:'Saisie du score', summary:'Résultats'}[n];
+  document.getElementById('strip').style.display = n==='scoring'?'flex':'none';
   window.scrollTo(0,0);
 }
 
 function renderHole(i) {
   const h=HOLES[i], sk=S.strokes[i], d=h[S.tee];
   document.getElementById('pfill').style.width = Math.round((i+1)/18*100)+'%';
-  document.getElementById('s-hole').textContent = `${i+1}/18`;
+  document.getElementById('st-hole').textContent = `${i+1}/18`;
+  // Numéro de trou dans le sous-titre du header
+  document.getElementById('header-sub').textContent = `Trou ${i+1} / 18 · ${i<9?'Aller':'Retour'}`;
+
   document.getElementById('hole-display').innerHTML=`
-    <div class="hole-header">
-      <div><div class="hole-num">${i+1}</div><div style="font-size:.7rem;opacity:.7">${i<9?'Aller':'Retour'}</div></div>
-      <div><div style="font-size:.68rem;opacity:.7">PAR</div><div style="font-size:1.5rem;font-weight:900">${h.par}</div></div>
-      <div><div style="font-size:.68rem;opacity:.7">INDEX</div><div style="font-size:1.5rem;font-weight:900">${h.hcp}</div></div>
-      <div><div style="font-size:.68rem;opacity:.7">${S.tee.toUpperCase()}</div><div style="font-size:1.1rem;font-weight:800">${d}m</div></div>
-    </div>
-    <div class="hcp-banner">
-      Handicap de jeu : <strong>${S.playHcp>0?'+':''}${S.playHcp}</strong>
-      &nbsp;·&nbsp; Coups reçus :
-      <strong>${sk>0?'+'+sk:sk===0?'0':sk}</strong>
-      ${sk>0?`<span class="sbadge">${sk}</span>`:''}
+    <div class="hole-card" data-n="${i+1}">
+      <div class="hole-top">
+        <div>
+          <div class="hole-lbl">Trou</div>
+          <div class="hole-num-wrap">
+            <span class="hole-big">${i+1}</span>
+            <span class="hole-of18">/ 18</span>
+          </div>
+        </div>
+        <div class="hole-half">
+          ${i<9?'Aller':'Retour'}
+          <small>Trou ${i+1} sur 18</small>
+        </div>
+      </div>
+      <div class="hole-meta-grid">
+        <div class="hole-meta-item">
+          <div class="hml">Par</div><div class="hmv">${h.par}</div>
+        </div>
+        <div class="hole-meta-item">
+          <div class="hml">Index</div><div class="hmv">${h.hcp}</div>
+        </div>
+        <div class="hole-meta-item">
+          <div class="hml">${S.tee}</div><div class="hmv">${d}m</div>
+        </div>
+      </div>
+      <div class="hole-hcp-row">
+        <span>Hcp de jeu : <strong>${S.playHcp>0?'+':''}${S.playHcp}</strong></span>
+        <span style="opacity:.4">·</span>
+        <span>Coups reçus : <strong>${sk>0?'+'+sk:sk===0?'0':sk}</strong>
+          ${sk>0?`<span class="sbadge">${sk}</span>`:''}</span>
+      </div>
     </div>`;
-  const inp=document.getElementById('score-inp');
-  inp.value = S.scores[i]!==null ? S.scores[i] : '';
-  updatePts();
-  document.getElementById('btn-prev').disabled = i===0;
-  document.getElementById('btn-next').textContent = i<17?'Suivant →':'🏁 Voir les résultats';
+
+  document.getElementById('btn-prev').disabled = (i===0);
+  document.getElementById('btn-next').textContent = i<17?'Suivant →':'🏁 Résultats';
   document.getElementById('swipe-hint').style.display = i>=2?'none':'';
+
+  // Restaure le score saisi
+  const saved = S.scores[i];
+  S.extOpen = false;
+  if (saved!==null && saved>=9) {
+    S.extScore = saved;
+    openExtKbd();
+  } else {
+    closeExtKbd();
+    renderKeypadSelection(saved);
+  }
 }
 
-function onScoreFocus() {
-  setTimeout(()=>document.getElementById('score-inp').scrollIntoView({behavior:'smooth',block:'center'}),350);
+/* ═══════════════════════════════════════════════
+   CLAVIER 9 TOUCHES
+═══════════════════════════════════════════════ */
+// Attache les listeners une seule fois
+document.querySelectorAll('.key-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const v = btn.dataset.v;
+    if (v === '9plus') {
+      S.extScore = 9;
+      openExtKbd();
+      setScore(9);
+    } else {
+      closeExtKbd();
+      setScore(parseInt(v));
+    }
+  });
+});
+
+function openExtKbd() {
+  document.getElementById('keypad-main').style.display = 'none';
+  document.getElementById('keypad-ext').classList.add('open');
+  document.getElementById('ext-val').textContent = S.extScore;
+  S.extOpen = true;
+}
+function closeExtKbd() {
+  document.getElementById('keypad-main').style.display = 'grid';
+  document.getElementById('keypad-ext').classList.remove('open');
+  S.extOpen = false;
+}
+function backKbd() {
+  closeExtKbd();
+  // Si le score courant était >=9, on le réinitialise
+  if (S.scores[S.hole]>=9) setScore(null);
+  else renderKeypadSelection(S.scores[S.hole]);
+}
+function adjExt(d) {
+  S.extScore = Math.max(9, Math.min(20, S.extScore + d));
+  document.getElementById('ext-val').textContent = S.extScore;
+  setScore(S.extScore);
+  if (navigator.vibrate) navigator.vibrate(15);
 }
 
-function onScoreInput() {
-  const v=parseInt(document.getElementById('score-inp').value);
-  S.scores[S.hole]=(!isNaN(v)&&v>0)?v:null;
-  updatePts(); updateStrip();
+/* Met à jour le surlignage des touches 1–8 */
+function renderKeypadSelection(val) {
+  document.querySelectorAll('.key-btn[data-v]').forEach(b => {
+    b.className = 'key-btn' + (b.dataset.v==='9plus' ? ' key-9plus' : '');
+  });
+  if (val===null || val===undefined) return;
+  if (val>=9) {
+    // 9+ actif
+    const kp = document.querySelector('.key-9plus');
+    if (kp) kp.classList.add('active');
+    return;
+  }
+  const btn = document.querySelector(`.key-btn[data-v="${val}"]`);
+  if (!btn) return;
+  // Couleur selon résultat
+  const h  = HOLES[S.hole], sk = S.strokes[S.hole];
+  const cls = getResultClass(val, h.par, sk);
+  btn.classList.add(cls);
 }
 
-function adjScore(d) {
-  const inp=document.getElementById('score-inp');
-  const cur=inp.value!==''?parseInt(inp.value):HOLES[S.hole].par;
-  const nxt=Math.max(1,Math.min(15,cur+d));
-  inp.value=nxt; S.scores[S.hole]=nxt;
-  updatePts(); updateStrip();
-  if(navigator.vibrate) navigator.vibrate(15);
+function getResultClass(gross, par, sk) {
+  if (S.mode==='stableford') {
+    const pts = sbPts(gross, par, sk);
+    if (pts>=4) return 'sel-eagle';
+    if (pts===3) return 'sel-birdie';
+    if (pts===2) return 'sel-par';
+    if (pts===1) return 'sel-bogey';
+    return 'sel-bad';
+  } else {
+    const net = gross - sk;
+    const diff = net - par;
+    if (diff<=-2) return 'sel-eagle';
+    if (diff===-1) return 'sel-birdie';
+    if (diff===0)  return 'sel-par';
+    if (diff===1)  return 'sel-bogey';
+    return 'sel-bad';
+  }
 }
 
-function updatePts() {
-  const i=S.hole, v=document.getElementById('score-inp').value;
-  const pts=sbPts(v!==''?parseInt(v):null,HOLES[i].par,S.strokes[i]);
-  const el=document.getElementById('pts-prev');
-  if(pts===null) { el.className='pts-preview p2'; el.textContent='Entrez votre score'; }
-  else { const p=Math.min(pts,5); el.className='pts-preview p'+p; el.textContent=PL[p]||`🏆 ${pts} pts`; }
+/* ═══════════════════════════════════════════════
+   SAISIE D'UN SCORE
+═══════════════════════════════════════════════ */
+function setScore(val) {
+  S.scores[S.hole] = val;
+  // Grand affichage
+  const bd = document.getElementById('score-big');
+  if (val===null) { bd.textContent='–'; bd.className='score-display empty'; }
+  else            { bd.textContent=val;  bd.className='score-display'; }
+  renderKeypadSelection(val);
+  updatePreview(val);
+  updateStrip();
+  if (val!==null && navigator.vibrate) navigator.vibrate(12);
+}
+
+function updatePreview(val) {
+  const el = document.getElementById('pts-prev');
+  const h  = HOLES[S.hole], sk = S.strokes[S.hole];
+  if (val===null) {
+    el.className='pts-preview prev-empty'; el.textContent='Touchez votre score'; return;
+  }
+  if (S.mode==='stableford') {
+    const pts = sbPts(val, h.par, sk);
+    const p   = Math.min(pts,5);
+    const cls = ['prev-bad','prev-bogey','prev-par','prev-birdie','prev-eagle','prev-eagle'][p];
+    el.className='pts-preview '+cls;
+    el.textContent = SB_LABELS[p]||`🏆 ${pts} pts`;
+    el.textContent += ` (${p} pt${p>1?'s':''})`;
+  } else {
+    // Stroke-play
+    const net  = val - sk;
+    const diff = net - h.par;
+    const lbl  = strokeLabel(diff);
+    const cls  = diff<=-2?'prev-eagle':diff===-1?'prev-birdie':diff===0?'prev-par':diff===1?'prev-bogey':'prev-bad';
+    el.className='pts-preview '+cls;
+    el.textContent = `Net : ${net} · ${lbl}`;
+  }
 }
 
 function updateStrip() {
-  let pts=0,gross=0,n=0;
-  S.scores.forEach((sc,i)=>{ if(sc!==null){ gross+=sc; pts+=sbPts(sc,HOLES[i].par,S.strokes[i]); n++; }});
-  document.getElementById('s-pts').textContent   = pts;
-  document.getElementById('s-gross').textContent = n>0?gross:'–';
-  document.getElementById('s-proj').textContent  = pts+(18-n)*2;
+  let gross=0, net=0, pts=0, vspar=0, n=0;
+  S.scores.forEach((sc,i)=>{
+    if (sc!==null) {
+      gross+=sc; net+=sc-S.strokes[i];
+      pts+=sbPts(sc,HOLES[i].par,S.strokes[i]);
+      vspar+=(sc-S.strokes[i])-HOLES[i].par;
+      n++;
+    }
+  });
+  if (S.mode==='stroke') {
+    document.getElementById('st-a').textContent = n>0 ? gross : '–';
+    document.getElementById('st-b').textContent = n>0 ? net   : '–';
+    const vp = n>0 ? (vspar===0?'E':vspar>0?`+${vspar}`:vspar) : '–';
+    document.getElementById('st-c').textContent = vp;
+  } else {
+    document.getElementById('st-a').textContent = pts;
+    document.getElementById('st-b').textContent = n>0 ? gross : '–';
+    document.getElementById('st-c').textContent = pts+(18-n)*2;
+  }
 }
 
+/* ═══════════════════════════════════════════════
+   NAVIGATION ENTRE TROUS
+═══════════════════════════════════════════════ */
 function nextHole() {
-  document.getElementById('score-inp').blur();
-  if(S.hole<17){ S.hole++; renderHole(S.hole); window.scrollTo({top:0,behavior:'smooth'}); }
+  if (S.hole<17) { S.hole++; renderHole(S.hole); window.scrollTo({top:0,behavior:'smooth'}); }
   else showSummary();
 }
-
 function prevHole() {
-  document.getElementById('score-inp').blur();
-  if(S.hole>0){ S.hole--; renderHole(S.hole); window.scrollTo({top:0,behavior:'smooth'}); }
+  if (S.hole>0) { S.hole--; renderHole(S.hole); window.scrollTo({top:0,behavior:'smooth'}); }
 }
 
-// ══ Swipe ══
+// Swipe gauche/droite
 (()=>{
   let sx=0,sy=0,st=0;
   const z=document.getElementById('swipe-zone');
   z.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;st=Date.now();},{passive:true});
   z.addEventListener('touchend',e=>{
-    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy, dt=Date.now()-st;
-    if(Math.abs(dx)>60&&Math.abs(dy)/Math.abs(dx)<0.7&&dt<400&&document.activeElement!==document.getElementById('score-inp')){
+    const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy,dt=Date.now()-st;
+    if(Math.abs(dx)>60&&Math.abs(dy)/Math.abs(dx)<0.7&&dt<400)
       dx<0?nextHole():prevHole();
-    }
   },{passive:true});
 })();
 
-// ══════════════════════════════════════════════
-//  RÉSUMÉ
-// ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
+   RÉSUMÉ
+═══════════════════════════════════════════════ */
 function showSummary() {
   showScreen('summary');
   document.getElementById('pfill').style.width='100%';
+
   const td=TEES[S.tee], sss=td.sss[S.gender], slope=td.slope[S.gender], par=td.par;
-  let tg=0,tp=0,n=0;
-  S.scores.forEach((sc,i)=>{ if(sc!==null){ tg+=sc; tp+=sbPts(sc,HOLES[i].par,S.strokes[i]); n++; }});
-  const ag=adjGross(S.scores,S.strokes), diff=scoreDiff(ag,sss,slope), dr=Math.round(diff*10)/10;
-  const emoji=tp>=36?'🎉':tp>=28?'👍':'💪';
-  const vs=tp>36?`−${tp-36}`:`+${36-tp}`;
+  let tGross=0, tNet=0, tPts=0, tVsPar=0, n=0;
+  S.scores.forEach((sc,i)=>{
+    if(sc!==null){
+      tGross+=sc; tNet+=sc-S.strokes[i];
+      tPts+=sbPts(sc,HOLES[i].par,S.strokes[i]);
+      tVsPar+=(sc-S.strokes[i])-HOLES[i].par; n++;
+    }
+  });
+
+  const ag=adjGross(S.scores,S.strokes);
+  const diff=scoreDiff(ag,sss,slope);
+  const dr=Math.round(diff*10)/10;
+  const isStbl=S.mode==='stableford';
+
+  // ── Header ──
+  const mainVal = isStbl ? tPts : (tVsPar===0?'E':tVsPar>0?`+${tVsPar}`:tVsPar);
+  const mainLbl = isStbl ? 'points Stableford · standard 36' : 'score net vs par';
+  const emoji = isStbl
+    ? (tPts>=36?'🎉':tPts>=28?'👍':'💪')
+    : (tVsPar<0?'🎉':tVsPar===0?'👍':'💪');
 
   document.getElementById('sum-hdr').innerHTML=`
-    <h2>${emoji} ${S.name} – Départ ${S.tee}</h2>
-    <div class="sum-pts">${tp}</div>
-    <div class="sum-lbl">points Stableford · standard 36</div>
-    <div style="margin-top:8px;font-size:.82rem;opacity:.85">Golf du Clou · ${new Date().toLocaleDateString('fr-FR')}</div>`;
+    <h2>${emoji} ${S.name} – ${isStbl?'Stableford':'Stroke-Play'} · Départ ${S.tee}</h2>
+    <div class="sum-pts">${mainVal}</div>
+    <div class="sum-lbl">${mainLbl}</div>
+    <div style="margin-top:7px;font-size:.8rem;opacity:.85">
+      Golf du Clou · ${new Date().toLocaleDateString('fr-FR')}
+    </div>`;
 
-  document.getElementById('sum-stats').innerHTML=`
+  // ── Stats ──
+  let statsHtml = `
     <div class="stat-row"><span class="stat-lbl">Trous joués</span><span class="stat-val">${n}/18</span></div>
-    <div class="stat-row"><span class="stat-lbl">Score brut</span><span class="stat-val">${tg}</span></div>
-    <div class="stat-row"><span class="stat-lbl">/ par (${par})</span><span class="stat-val">${tg>=par?'+':''}${tg-par}</span></div>
-    <div class="stat-row"><span class="stat-lbl">Points Stableford</span><span class="stat-val">${tp} pts</span></div>
-    <div class="stat-row"><span class="stat-lbl">Écart au standard</span><span class="stat-val">${vs}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Score brut</span><span class="stat-val">${tGross}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Score net</span><span class="stat-val">${tNet}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Score brut vs par (${par})</span><span class="stat-val">${tGross>=par?'+':''}${tGross-par}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Score net vs par</span><span class="stat-val">${tVsPar===0?'E':tVsPar>0?`+${tVsPar}`:tVsPar}</span></div>`;
+  if (isStbl) {
+    const vs=tPts>36?`−${tPts-36}`:`+${36-tPts}`;
+    statsHtml+=`
+    <div class="stat-row"><span class="stat-lbl">Points Stableford</span><span class="stat-val">${tPts} pts</span></div>
+    <div class="stat-row"><span class="stat-lbl">Écart au standard (36)</span><span class="stat-val">${vs}</span></div>`;
+  }
+  statsHtml+=`
     <div class="stat-row"><span class="stat-lbl">Score brut ajusté WHS</span><span class="stat-val">${ag}</span></div>
     <div class="stat-row"><span class="stat-lbl">Différentiel de score</span><span class="stat-val">${dr>0?'+':''}${dr.toFixed(1)}</span></div>
     <div class="stat-row"><span class="stat-lbl">Handicap de jeu</span><span class="stat-val">${S.playHcp>0?'+':''}${S.playHcp}</span></div>
     <div class="stat-row"><span class="stat-lbl">SSS · Slope</span><span class="stat-val">${sss} · ${slope}</span></div>`;
+  document.getElementById('sum-stats').innerHTML=statsHtml;
 
+  // ── Index ──
   const dir=dr<S.index?'📉 Amélioration potentielle':'📈 Augmentation potentielle';
   document.getElementById('idx-box').innerHTML=`
     <div class="idx-lbl">Différentiel de cette partie</div>
     <div class="idx-val">${dr>0?'+':''}${dr.toFixed(1)}</div>
     <div class="idx-note">${dir} · Index actuel : ${S.index}</div>`;
-
   document.getElementById('idx-expl').innerHTML=`
     <p>Ce différentiel sera intégré dans votre historique WHS via <strong>iGolf / FFGolf</strong>.
-    Le nouvel index = moyenne des <strong>8 meilleurs</strong> de vos 20 derniers différentiels.</p>
-    <p style="margin-top:8px">Un différentiel <strong>inférieur</strong> à ${S.index} améliore votre index, un différentiel <strong>supérieur</strong> le dégrade.</p>`;
+    Nouvel index = moyenne des <strong>8 meilleurs</strong> de vos 20 derniers différentiels.</p>`;
 
-  // Table
-  let aG=0,aP=0,rG=0,rP=0;
-  let t=`<thead><tr><th>T.</th><th>Par</th><th>HCP</th><th>Dist</th><th>Brut</th><th>+/−</th><th>Pts</th></tr></thead><tbody>`;
-  HOLES.forEach((h,i)=>{
-    if(i===9) t+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Aller</td><td>${aG||'–'}</td><td></td><td>${aP}</td></tr>`;
-    const sc=S.scores[i],sk=S.strokes[i],pts=sc!==null?sbPts(sc,h.par,sk):null,d=sc!==null?sc-h.par:null;
-    t+=`<tr><td><strong>${i+1}</strong></td><td>${h.par}</td>
-      <td>${h.hcp}${sk!==0?`<sup style="color:var(--gold);font-weight:800">${sk>0?'+':''}${sk}</sup>`:''}</td>
-      <td style="font-size:.75rem">${h[S.tee]}m</td>
-      <td>${sc??'–'}</td><td>${d===null?'–':d>0?'+'+d:d}</td>
-      <td class="pc ${pts!==null?'p'+Math.min(pts,4):''}">${pts??'–'}</td></tr>`;
-    if(i<9){aG+=sc??0;aP+=pts??0;}else{rG+=sc??0;rP+=pts??0;}
-  });
-  t+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Retour</td><td>${rG||'–'}</td><td></td><td>${rP}</td></tr>
-  <tr class="tr" style="background:#c8e6c9!important"><td colspan="4" style="text-align:left;padding-left:6px"><strong>Total</strong></td>
-  <td><strong>${(aG+rG)||'–'}</strong></td><td></td><td><strong>${aP+rP}</strong></td></tr></tbody>`;
-  document.getElementById('sc-table').innerHTML=t;
+  // ── Carte de score ──
+  buildScorecard(isStbl);
 }
 
+function buildScorecard(isStbl) {
+  let aG=0,aNet=0,aPts=0,aVP=0;
+  let rG=0,rNet=0,rPts=0,rVP=0;
+
+  // En-têtes selon mode
+  const heads = isStbl
+    ? `<tr><th>T.</th><th>Par</th><th>HCP</th><th>Dist</th><th>Brut</th><th>Net</th><th>Pts</th></tr>`
+    : `<tr><th>T.</th><th>Par</th><th>HCP</th><th>Dist</th><th>Brut</th><th>Net</th><th>vs⁺</th></tr>`;
+
+  let rows = '';
+  HOLES.forEach((h,i)=>{
+    // Séparateur aller/retour
+    if (i===9) {
+      if (isStbl) {
+        rows+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Aller</td>
+          <td>${aG||'–'}</td><td>${aNet||'–'}</td><td>${aPts}</td></tr>`;
+      } else {
+        const v=aVP===0?'E':aVP>0?`+${aVP}`:aVP;
+        rows+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Aller</td>
+          <td>${aG||'–'}</td><td>${aNet||'–'}</td><td class="vpar">${v}</td></tr>`;
+      }
+    }
+
+    const sc=S.scores[i], sk=S.strokes[i];
+    const net=sc!==null?sc-sk:null;
+    const pts=sc!==null?sbPts(sc,h.par,sk):null;
+    const vpd=net!==null?net-h.par:null;
+    const vpStr=vpd===null?'–':strokeVparStr(vpd);
+    const vpCls=vpd!==null?strokeVparClass(vpd):'';
+
+    if (isStbl) {
+      rows+=`<tr>
+        <td><strong>${i+1}</strong></td><td>${h.par}</td>
+        <td>${h.hcp}${sk!==0?`<sup style="color:var(--gold);font-weight:800">${sk>0?'+':''}${sk}</sup>`:''}</td>
+        <td style="font-size:.72rem">${h[S.tee]}m</td>
+        <td>${sc??'–'}</td><td>${net??'–'}</td>
+        <td class="pc ${pts!==null?'p'+Math.min(pts,4):''}">${pts??'–'}</td>
+      </tr>`;
+    } else {
+      rows+=`<tr>
+        <td><strong>${i+1}</strong></td><td>${h.par}</td>
+        <td>${h.hcp}${sk!==0?`<sup style="color:var(--gold);font-weight:800">${sk>0?'+':''}${sk}</sup>`:''}</td>
+        <td style="font-size:.72rem">${h[S.tee]}m</td>
+        <td>${sc??'–'}</td><td>${net??'–'}</td>
+        <td class="vpar ${vpCls}">${vpStr}</td>
+      </tr>`;
+    }
+
+    if (i<9)  { aG+=sc??0; aNet+=net??0; aPts+=pts??0; aVP+=vpd??0; }
+    else      { rG+=sc??0; rNet+=net??0; rPts+=pts??0; rVP+=vpd??0; }
+  });
+
+  // Retour
+  if (isStbl) {
+    rows+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Retour</td>
+      <td>${rG||'–'}</td><td>${rNet||'–'}</td><td>${rPts}</td></tr>
+    <tr class="tr-total"><td colspan="4" style="text-align:left;padding-left:6px"><strong>Total</strong></td>
+      <td><strong>${(aG+rG)||'–'}</strong></td><td><strong>${(aNet+rNet)||'–'}</strong></td>
+      <td><strong>${aPts+rPts}</strong></td></tr>`;
+  } else {
+    const tv=aVP+rVP; const tvStr=tv===0?'E':tv>0?`+${tv}`:tv;
+    const rv=rVP===0?'E':rVP>0?`+${rVP}`:rVP;
+    rows+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Retour</td>
+      <td>${rG||'–'}</td><td>${rNet||'–'}</td><td class="vpar">${rv}</td></tr>
+    <tr class="tr-total"><td colspan="4" style="text-align:left;padding-left:6px"><strong>Total</strong></td>
+      <td><strong>${(aG+rG)||'–'}</strong></td><td><strong>${(aNet+rNet)||'–'}</strong></td>
+      <td class="vpar ${strokeVparClass(aVP+rVP)}"><strong>${tvStr}</strong></td></tr>`;
+  }
+
+  document.getElementById('sc-table').innerHTML=`<thead>${heads}</thead><tbody>${rows}</tbody>`;
+}
+
+/* ═══════════════════════════════════════════════
+   NOUVEAU PARCOURS
+═══════════════════════════════════════════════ */
 function newRound() {
-  S={tee:null,gender:null,index:null,name:'',playHcp:0,strokes:[],scores:new Array(18).fill(null),hole:0};
-  document.querySelectorAll('.tee-btn,.gender-btn').forEach(b=>b.classList.remove('selected'));
+  S={mode:null,tee:null,gender:null,index:null,name:'',
+     playHcp:0,strokes:[],scores:new Array(18).fill(null),hole:0,extOpen:false,extScore:9};
+  document.querySelectorAll('.tee-btn,.gender-btn,.mode-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('inp-idx').value='';
   document.getElementById('inp-name').value='';
   document.getElementById('btn-start').disabled=true;
