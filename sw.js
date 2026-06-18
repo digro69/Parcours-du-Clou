@@ -1,6 +1,7 @@
 // ── Service Worker – Golf du Clou Stableford ──
 // Stratégie : Cache First – fonctionne 100% hors réseau sur le parcours
-const CACHE_NAME = 'golf-clou-v2';
+// ⚠️  Incrémenter CACHE_NAME à chaque déploiement pour forcer la mise à jour
+const CACHE_NAME = 'golf-clou-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -14,7 +15,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting())   // active immédiatement sans attendre fermeture
   );
 });
 
@@ -24,7 +25,7 @@ self.addEventListener('activate', event => {
       .then(keys => Promise.all(
         keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       ))
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim())  // prend le contrôle des onglets ouverts
   );
 });
 
