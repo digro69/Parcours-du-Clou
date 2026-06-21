@@ -649,21 +649,19 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
     </span>
   </div>
 
-  <!-- ① Mode de jeu -->
-  <div class="card">
-    <h2>🏆 Mode de jeu</h2>
-    <div class="mode-grid">
-      <button class="mode-btn" data-mode="stableford">
-        <span class="m-icon">🎯</span>
-        <span class="m-name">Stableford</span>
-        <span class="m-desc">Points par trou</span>
-      </button>
-      <button class="mode-btn" data-mode="stroke">
-        <span class="m-icon">📊</span>
-        <span class="m-name">Stroke-Play</span>
-        <span class="m-desc">Score total</span>
-      </button>
-    </div>
+  <!-- Mode sélectionné sur l'écran d'accueil – rappel -->
+  <div id="mode-reminder" style="
+    display:flex; align-items:center; gap:10px; margin-bottom:12px;
+    background:#e8f5e9; border-radius:12px; padding:11px 14px;
+    font-size:.88rem; font-weight:700; color:var(--gd);
+  ">
+    <span id="mode-reminder-icon" style="font-size:1.4rem"></span>
+    <span id="mode-reminder-label"></span>
+    <button onclick="showScreen('splash')" style="
+      margin-left:auto; border:none; background:transparent;
+      color:var(--mut); font-size:.75rem; cursor:pointer; padding:4px 8px;
+      border-radius:8px; border:1px solid #d0ddd4;
+    ">Changer</button>
   </div>
 
   <!-- ② Couleur de départ -->
@@ -770,6 +768,9 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 
     <!-- Fin de partie -->
     <button class="btn btn-endgame" onclick="showEndgame()">🏁 Fin de partie</button>
+
+    <!-- Espace sous le bouton pour ne pas être caché par la barre fixe -->
+    <div class="bottom-sp"></div>
 
   </div><!-- /swipe-zone -->
 
@@ -902,10 +903,7 @@ let S = {
 /* ═══════════════════════════════════════════════
    SETUP LISTENERS
 ═══════════════════════════════════════════════ */
-document.querySelectorAll('.mode-btn').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('selected'));
-  b.classList.add('selected'); S.mode = b.dataset.mode; checkReady();
-}));
+// Mode sélectionné via selectModeSplash() — pas de listener mode-btn dans le setup
 document.querySelectorAll('.tee-btn').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tee-btn').forEach(x => x.classList.remove('selected'));
   b.classList.add('selected'); S.tee = b.dataset.tee; updateTeeInfo(); checkReady();
@@ -930,9 +928,11 @@ function updateTeeInfo() {
 function checkReady() {
   const v = parseFloat(document.getElementById('inp-idx').value);
   const ok = S.mode && S.tee && S.gender && !isNaN(v) && v>=-10 && v<=54
-           && TEES[S.tee]?.sss[S.gender]!==null;
+           && TEES[S.tee]?.sss[S.gender] !== null;
   document.getElementById('btn-start').disabled = !ok;
 }
+// Les mode-btn ne sont plus dans le setup mais on garde l'écouteur au cas où
+
 
 /* ═══════════════════════════════════════════════
    CALCULS WHS
@@ -1017,10 +1017,19 @@ function showScreen(n) {
 ═══════════════════════════════════════════════ */
 function selectModeSplash(mode) {
   S.mode = mode;
-  // Pré-sélectionne le bouton dans l'écran setup
-  document.querySelectorAll('.mode-btn').forEach(b =>
-    b.classList.toggle('selected', b.dataset.mode === mode)
-  );
+  // Affiche le rappel du mode choisi dans l'écran setup
+  const labels = {
+    stableford: { icon:'🎯', label:'Mode Stableford · Points par trou' },
+    stroke:     { icon:'📊', label:'Mode Scorecard · Score brut / net'  }
+  };
+  const info = labels[mode] || {};
+  const ri = document.getElementById('mode-reminder-icon');
+  const rl = document.getElementById('mode-reminder-label');
+  const rb = document.getElementById('mode-reminder');
+  if (ri) ri.textContent = info.icon || '';
+  if (rl) rl.textContent = info.label || '';
+  if (rb) rb.style.background = mode==='stroke' ? '#e3f2fd' : '#e8f5e9';
+  if (rb) rb.style.color      = mode==='stroke' ? 'var(--blu)' : 'var(--gd)';
   checkReady();
   showScreen('setup');
 }
