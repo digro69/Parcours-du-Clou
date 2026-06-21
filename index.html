@@ -197,6 +197,114 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 .modal-close:active { background:#134520; }
 
 /* ═══════════════════════════════════════════════
+   SPLASH / ÉCRAN D'ACCUEIL
+═══════════════════════════════════════════════ */
+#screen-splash { padding:0!important; max-width:none; }
+
+.splash-hero {
+  background:linear-gradient(170deg,#1e4a6e 0%,#2b6b9a 55%,#2e7d46 100%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:calc(40px + var(--sat)) 24px 32px;
+  min-height:55vh; position:relative; overflow:hidden;
+}
+/* Halo décoratif derrière le logo */
+.splash-hero::before {
+  content:''; position:absolute;
+  width:280px; height:280px; border-radius:50%;
+  background:rgba(255,255,255,.07);
+  top:50%; left:50%; transform:translate(-50%,-55%);
+}
+.splash-logo {
+  width:140px; height:140px; border-radius:50%;
+  box-shadow:0 8px 32px rgba(0,0,0,.40);
+  position:relative; z-index:1;
+  animation:splash-in .5s ease both;
+}
+@keyframes splash-in {
+  from { transform:scale(.7); opacity:0; }
+  to   { transform:scale(1);  opacity:1; }
+}
+.splash-title {
+  font-size:1.65rem; font-weight:900; color:#fff;
+  letter-spacing:.5px; margin-top:18px; position:relative;
+  text-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.splash-sub {
+  font-size:.85rem; color:rgba(255,255,255,.72);
+  margin-top:5px; letter-spacing:.3px;
+}
+
+/* Carte de sélection du mode */
+.splash-card {
+  background:#fff; margin:0 14px;
+  border-radius:20px; padding:20px 16px 16px;
+  box-shadow:0 -4px 24px rgba(0,0,0,.10);
+  margin-top:-18px; position:relative; z-index:10;
+}
+.splash-card-title {
+  text-align:center; font-size:.78rem; font-weight:700;
+  color:var(--mut); text-transform:uppercase; letter-spacing:1.2px;
+  margin-bottom:14px;
+}
+.splash-modes { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.splash-mode-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; padding:18px 8px; border-radius:14px; border:2.5px solid #e0e8e2;
+  background:#f9fbf9; cursor:pointer; min-height:105px;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  transition:all .14s;
+}
+.splash-mode-btn:active { transform:scale(.96); }
+.splash-mode-btn[data-mode="stableford"]:hover,
+.splash-mode-btn[data-mode="stableford"]:focus {
+  border-color:var(--gd); background:#e8f5e9;
+}
+.splash-mode-btn[data-mode="stroke"]:hover,
+.splash-mode-btn[data-mode="stroke"]:focus {
+  border-color:var(--blu); background:#e3f2fd;
+}
+.sm-icon { font-size:2.3rem; }
+.sm-name { font-size:.98rem; font-weight:800; color:var(--txt); }
+.sm-desc { font-size:.7rem; color:var(--mut); }
+.splash-mode-btn[data-mode="stableford"] .sm-name { color:var(--gd); }
+.splash-mode-btn[data-mode="stroke"] .sm-name { color:var(--blu); }
+
+/* ═══════════════════════════════════════════════
+   MODAL FIN DE PARTIE
+═══════════════════════════════════════════════ */
+.endgame-modal .modal-box { text-align:center; }
+.endgame-icon { font-size:2.8rem; margin-bottom:6px; }
+.endgame-progress {
+  font-size:.82rem; color:var(--mut); margin-bottom:4px; line-height:1.5;
+}
+.endgame-choices { display:grid; gap:9px; margin-top:16px; }
+.eg-btn {
+  width:100%; padding:14px 16px; border:none; border-radius:12px;
+  font-size:.93rem; font-weight:700; cursor:pointer;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  transition:opacity .12s; text-align:center;
+}
+.eg-btn:active { opacity:.8; }
+.eg-save   { background:var(--gd);    color:#fff; }
+.eg-nosave { background:#e8f0eb;      color:var(--gd); }
+.eg-cancel { background:#f4f8f4;      color:var(--mut); font-weight:600; }
+
+/* Badge sauvegardé dans le résumé */
+.saved-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,.22); border-radius:20px;
+  padding:4px 12px; font-size:.78rem; margin-top:8px;
+}
+
+/* Bouton Fin de partie (discret) */
+.btn-endgame {
+  background:transparent; color:var(--mut);
+  border:1.5px solid #d8e4da; font-size:.85rem;
+  margin-bottom:10px; min-height:44px;
+}
+.btn-endgame:active { background:#f0f4f1; }
+
+/* ═══════════════════════════════════════════════
    EN-TÊTE DE TROU
 ═══════════════════════════════════════════════ */
 .hole-card {
@@ -438,6 +546,26 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 </head>
 <body>
 
+<!-- ══════ MODAL FIN DE PARTIE ══════ -->
+<div class="modal-overlay endgame-modal" id="modal-endgame">
+  <div class="modal-box">
+    <div class="endgame-icon">🏁</div>
+    <h2>Terminer la partie ?</h2>
+    <div class="endgame-progress" id="endgame-progress"></div>
+    <div class="endgame-choices">
+      <button class="eg-btn eg-save" onclick="finishRound(true)">
+        💾 Terminer et sauvegarder
+      </button>
+      <button class="eg-btn eg-nosave" onclick="finishRound(false)">
+        📊 Voir les résultats sans sauvegarder
+      </button>
+      <button class="eg-btn eg-cancel" onclick="closeEndgame()">
+        ← Continuer à jouer
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════ MODAL INSTALLATION ══════ -->
 <div class="modal-overlay" id="modal-install">
   <div class="modal-box">
@@ -476,6 +604,35 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
   <p id="header-sub">Configuration</p>
   <div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div>
 </header>
+
+<!-- ══════════════════════════════════════
+     ÉCRAN 0 : SPLASH / ACCUEIL
+══════════════════════════════════════ -->
+<div id="screen-splash" class="screen active">
+  <div class="splash-hero">
+    <img src="./icon-512.png" class="splash-logo" alt="Golf du Clou">
+    <div class="splash-title">Golf du Clou</div>
+    <div class="splash-sub">⛳ Saisie des scores</div>
+  </div>
+  <div class="splash-card">
+    <div class="splash-card-title">Choisissez votre mode de jeu</div>
+    <div class="splash-modes">
+      <button class="splash-mode-btn" data-mode="stableford"
+              onclick="selectModeSplash('stableford')">
+        <span class="sm-icon">🎯</span>
+        <span class="sm-name">Stableford</span>
+        <span class="sm-desc">Points par trou</span>
+      </button>
+      <button class="splash-mode-btn" data-mode="stroke"
+              onclick="selectModeSplash('stroke')">
+        <span class="sm-icon">📊</span>
+        <span class="sm-name">Scorecard</span>
+        <span class="sm-desc">Score total brut/net</span>
+      </button>
+    </div>
+  </div>
+  <div class="bottom-sp"></div>
+</div>
 
 <!-- ══════════════════════════════════════
      ÉCRAN 1 : SETUP
@@ -616,6 +773,10 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
       <button class="btn btn-secondary" id="btn-prev" onclick="prevHole()">← Précédent</button>
       <button class="btn btn-primary"   id="btn-next" onclick="nextHole()">Suivant →</button>
     </div>
+
+    <!-- Fin de partie -->
+    <button class="btn btn-endgame" onclick="showEndgame()">🏁 Fin de partie</button>
+
   </div><!-- /swipe-zone -->
 
   <!-- Barre fixe bas -->
@@ -741,7 +902,7 @@ let S = {
   mode:null,        // 'stableford' | 'stroke'
   tee:null, gender:null, index:null, name:'',
   playHcp:0, strokes:[], scores:new Array(18).fill(null), hole:0,
-  extOpen:false, extScore:9
+  extOpen:false, extScore:9, saved:false
 };
 
 /* ═══════════════════════════════════════════════
@@ -849,10 +1010,74 @@ function startRound() {
 function showScreen(n) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+n).classList.add('active');
-  document.getElementById('header-sub').textContent =
-    {setup:'Configuration', scoring:'Saisie du score', summary:'Résultats'}[n];
+  const sub = {setup:'Configuration', scoring:'Saisie du score', summary:'Résultats'}[n]||'';
+  document.getElementById('header-sub').textContent = sub;
   document.getElementById('strip').style.display = n==='scoring'?'flex':'none';
+  // Cache le header sur le splash pour un look plein écran
+  document.querySelector('header').style.display = n==='splash'?'none':'';
   window.scrollTo(0,0);
+}
+
+/* ═══════════════════════════════════════════════
+   SPLASH : SÉLECTION DU MODE
+═══════════════════════════════════════════════ */
+function selectModeSplash(mode) {
+  S.mode = mode;
+  // Pré-sélectionne le bouton dans l'écran setup
+  document.querySelectorAll('.mode-btn').forEach(b =>
+    b.classList.toggle('selected', b.dataset.mode === mode)
+  );
+  checkReady();
+  showScreen('setup');
+}
+
+/* ═══════════════════════════════════════════════
+   FIN DE PARTIE
+═══════════════════════════════════════════════ */
+function showEndgame() {
+  // Calcul du résumé rapide
+  const n = S.scores.filter(s=>s!==null).length;
+  let pts=0, gross=0;
+  S.scores.forEach((sc,i)=>{
+    if(sc!==null){ gross+=sc; pts+=sbPts(sc,HOLES[i].par,S.strokes[i]); }
+  });
+  const isStbl = S.mode==='stableford';
+  const prog = n===0
+    ? 'Aucun trou saisi.'
+    : isStbl
+      ? `${n} trou${n>1?'s':''} joué${n>1?'s':''} · ${pts} point${pts>1?'s':''}`
+      : `${n} trou${n>1?'s':''} joué${n>1?'s':''} · Brut : ${gross}`;
+  document.getElementById('endgame-progress').textContent = prog;
+  document.getElementById('modal-endgame').classList.add('open');
+}
+function closeEndgame() {
+  document.getElementById('modal-endgame').classList.remove('open');
+}
+function finishRound(save) {
+  closeEndgame();
+  S.saved = false;
+  if (save) {
+    try {
+      const data = {
+        date:     new Date().toLocaleDateString('fr-FR'),
+        ts:       Date.now(),
+        name:     S.name,
+        mode:     S.mode,
+        tee:      S.tee,
+        gender:   S.gender,
+        index:    S.index,
+        playHcp:  S.playHcp,
+        scores:   [...S.scores],
+        strokes:  [...S.strokes]
+      };
+      const hist = JSON.parse(localStorage.getItem('golf-clou-history')||'[]');
+      hist.unshift(data);
+      if(hist.length>20) hist.pop();
+      localStorage.setItem('golf-clou-history', JSON.stringify(hist));
+      S.saved = true;
+    } catch(e) { console.warn('[Save]', e); }
+  }
+  showSummary();
 }
 
 function renderHole(i) {
@@ -1100,7 +1325,7 @@ function updateStrip() {
 ═══════════════════════════════════════════════ */
 function nextHole() {
   if (S.hole<17) { S.hole++; renderHole(S.hole); window.scrollTo({top:0,behavior:'smooth'}); }
-  else showSummary();
+  else showEndgame();  // Propose save/no-save avant les résultats
 }
 function prevHole() {
   if (S.hole>0) { S.hole--; renderHole(S.hole); window.scrollTo({top:0,behavior:'smooth'}); }
@@ -1153,7 +1378,8 @@ function showSummary() {
     <div class="sum-lbl">${mainLbl}</div>
     <div style="margin-top:7px;font-size:.8rem;opacity:.85">
       Golf du Clou · ${new Date().toLocaleDateString('fr-FR')}
-    </div>`;
+    </div>
+    ${S.saved?'<div class="saved-badge">💾 Partie sauvegardée</div>':''}`;
 
   // ── Stats ──
   let statsHtml = `
@@ -1266,16 +1492,17 @@ function buildScorecard(isStbl) {
 ═══════════════════════════════════════════════ */
 function newRound() {
   S={mode:null,tee:null,gender:null,index:null,name:'',
-     playHcp:0,strokes:[],scores:new Array(18).fill(null),hole:0,extOpen:false,extScore:9};
+     playHcp:0,strokes:[],scores:new Array(18).fill(null),hole:0,
+     extOpen:false,extScore:9,saved:false};
   document.querySelectorAll('.tee-btn,.gender-btn,.mode-btn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('inp-idx').value='';
   document.getElementById('inp-name').value='';
   document.getElementById('btn-start').disabled=true;
   document.getElementById('pfill').style.width='0%';
-  showScreen('setup');
+  showScreen('splash');
 }
 
-showScreen('setup');
+showScreen('splash');
 </script>
 </body>
 </html>
