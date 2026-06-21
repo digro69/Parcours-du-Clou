@@ -296,13 +296,14 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
   padding:4px 12px; font-size:.78rem; margin-top:8px;
 }
 
-/* Bouton Fin de partie (discret) */
+/* Bouton Fin de partie */
 .btn-endgame {
-  background:transparent; color:var(--mut);
-  border:1.5px solid #d8e4da; font-size:.85rem;
-  margin-bottom:10px; min-height:44px;
+  background:var(--gd); color:#fff;
+  font-size:1rem; font-weight:700;
+  margin-bottom:10px; min-height:50px;
+  border:none;
 }
-.btn-endgame:active { background:#f0f4f1; }
+.btn-endgame:active { background:#134520; }
 
 /* ═══════════════════════════════════════════════
    EN-TÊTE DE TROU
@@ -478,7 +479,6 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
    INDICATEUR SWIPE & NAV
 ═══════════════════════════════════════════════ */
 .swipe-hint { text-align:center; font-size:.72rem; color:var(--mut); margin-bottom:8px; }
-.nav-btns   { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
 
 /* ═══════════════════════════════════════════════
    BARRE BASSE (safe area)
@@ -767,12 +767,6 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 
     <!-- Hint swipe -->
     <div class="swipe-hint" id="swipe-hint">← Glissez pour changer de trou →</div>
-
-    <!-- Navigation -->
-    <div class="nav-btns">
-      <button class="btn btn-secondary" id="btn-prev" onclick="prevHole()">← Précédent</button>
-      <button class="btn btn-primary"   id="btn-next" onclick="nextHole()">Suivant →</button>
-    </div>
 
     <!-- Fin de partie -->
     <button class="btn btn-endgame" onclick="showEndgame()">🏁 Fin de partie</button>
@@ -1121,8 +1115,6 @@ function renderHole(i) {
       </div>
     </div>`;
 
-  document.getElementById('btn-prev').disabled = (i===0);
-  document.getElementById('btn-next').textContent = i<17?'Suivant →':'🏁 Résultats';
   document.getElementById('swipe-hint').style.display = i>=2?'none':'';
 
   // Flèches de navigation gauche/droite
