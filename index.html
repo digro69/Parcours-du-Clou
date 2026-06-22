@@ -54,8 +54,8 @@ header p  { font-size:.76rem; opacity:.85; margin-top:1px; }
 ═══════════════════════════════════════════════ */
 .screen { display:none; padding:12px calc(12px + var(--sal)); max-width:500px; margin:0 auto; }
 .screen.active { display:block; }
-.top-sp    { height:12px; }
-.bottom-sp { height:calc(86px + var(--sab)); }
+.top-sp    { height:6px; }
+.bottom-sp { height:calc(68px + var(--sab)); }
 
 /* ═══════════════════════════════════════════════
    CARDS
@@ -299,8 +299,8 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 /* Bouton Fin de partie */
 .btn-endgame {
   background:var(--gd); color:#fff;
-  font-size:1rem; font-weight:700;
-  margin-bottom:10px; min-height:50px;
+  font-size:.95rem; font-weight:700;
+  margin-bottom:6px; min-height:44px;
   border:none;
 }
 .btn-endgame:active { background:#134520; }
@@ -310,8 +310,8 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 ═══════════════════════════════════════════════ */
 .hole-card {
   background:linear-gradient(160deg,var(--gd),var(--gm));
-  color:#fff; border-radius:14px; padding:16px 16px 13px;
-  margin-bottom:10px; overflow:hidden; position:relative;
+  color:#fff; border-radius:14px; padding:10px 12px 8px;
+  margin-bottom:6px; overflow:hidden; position:relative;
 }
 /* Grand chiffre fantôme décoratif en arrière-plan */
 .hole-card::after {
@@ -328,7 +328,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 .hole-num-wrap { display:flex; align-items:baseline; gap:5px; }
 .hole-lbl  { font-size:.68rem; opacity:.65; text-transform:uppercase;
              letter-spacing:1.8px; font-weight:600; margin-bottom:1px; }
-.hole-big  { font-size:5rem; font-weight:900; line-height:.95; }
+.hole-big  { font-size:3.8rem; font-weight:900; line-height:.95; }
 .hole-of18 { font-size:1.15rem; font-weight:700; opacity:.65; }
 /* Demi (Aller / Retour) + progression */
 .hole-half {
@@ -338,7 +338,7 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 
 /* ── Photo du trou (coin supérieur droit de la carte) ── */
 .hole-photo {
-  width:108px; height:108px; border-radius:10px; overflow:hidden;
+  width:86px; height:86px; border-radius:10px; overflow:hidden;
   flex-shrink:0; position:relative; align-self:flex-start;
   background:rgba(0,0,0,.18);
   box-shadow:0 3px 12px rgba(0,0,0,.40);
@@ -362,17 +362,17 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 /* Grille Par / Index / Dist */
 .hole-meta-grid {
   display:grid; grid-template-columns:repeat(3,1fr);
-  margin-top:10px; padding-top:10px;
+  margin-top:6px; padding-top:6px;
   border-top:1px solid rgba(255,255,255,.18);
 }
 .hole-meta-item { text-align:center; }
 .hml { font-size:.62rem; opacity:.6; text-transform:uppercase; letter-spacing:.4px; }
-.hmv { font-size:1.1rem; font-weight:800; margin-top:1px; }
+.hmv { font-size:1rem; font-weight:800; margin-top:1px; }
 /* Ligne Hcp de jeu / coups reçus */
 .hole-hcp-row {
-  margin-top:9px; padding-top:8px;
+  margin-top:5px; padding-top:5px;
   border-top:1px solid rgba(255,255,255,.15);
-  font-size:.8rem; display:flex; justify-content:center;
+  font-size:.76rem; display:flex; justify-content:center;
   gap:10px; flex-wrap:wrap; opacity:.92;
 }
 .hole-hcp-row strong { font-size:.88rem; }
@@ -385,13 +385,13 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 /* ═══════════════════════════════════════════════
    CLAVIER 9 TOUCHES
 ═══════════════════════════════════════════════ */
-.keypad-wrap { margin-bottom:10px; }
+.keypad-wrap { margin-bottom:5px; }
 
 /* Affichage du score courant au-dessus du clavier */
 .score-display {
   text-align:center; margin-bottom:0;
-  font-size:3.2rem; font-weight:900; line-height:1;
-  color:var(--gd); min-height:3.6rem;
+  font-size:2.8rem; font-weight:900; line-height:1;
+  color:var(--gd); min-height:3rem;
   transition:all .15s; flex:1;
   display:flex; align-items:center; justify-content:center;
 }
@@ -399,12 +399,12 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 
 /* Flèches de navigation gauche/droite autour du score */
 .score-nav-row {
-  display:flex; align-items:center; gap:6px; margin-bottom:8px;
+  display:flex; align-items:center; gap:6px; margin-bottom:4px;
 }
 .nav-arrow {
-  width:52px; height:52px; border-radius:50%;
+  width:44px; height:44px; border-radius:50%;
   border:2px solid #d0ddd4; background:#f4f8f4;
-  font-size:2rem; font-weight:300; color:var(--gd); cursor:pointer;
+  font-size:1.7rem; font-weight:300; color:var(--gd); cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   flex-shrink:0; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
   transition:all .12s; line-height:1; padding:0;
@@ -415,21 +415,21 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 /* Barre de score total en cours */
 .running-bar {
   background:rgba(26,92,42,.07); border-radius:10px;
-  padding:8px 12px; margin-bottom:10px;
+  padding:5px 10px; margin-bottom:5px;
   display:flex; align-items:center; justify-content:space-around; gap:4px;
 }
 .running-bar.empty .rb-val { color:#b0c4b8; }
 .rb-item { text-align:center; }
-.rb-val  { font-size:1.05rem; font-weight:800; color:var(--gd); line-height:1; }
-.rb-lbl  { font-size:.58rem; color:var(--mut); margin-top:2px; font-weight:600;
+.rb-val  { font-size:.92rem; font-weight:800; color:var(--gd); line-height:1; }
+.rb-lbl  { font-size:.54rem; color:var(--mut); margin-top:1px; font-weight:600;
            text-transform:uppercase; letter-spacing:.3px; }
 
 /* Grille 3×3 */
 .key-grid {
-  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-bottom:5px;
 }
 .key-btn {
-  height:60px; border:2.5px solid #d0ddd4; border-radius:12px;
+  height:52px; border:2.5px solid #d0ddd4; border-radius:12px;
   background:#fff; color:var(--txt);
   font-size:1.55rem; font-weight:700; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
@@ -488,8 +488,8 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
    APERÇU DU RÉSULTAT
 ═══════════════════════════════════════════════ */
 .pts-preview {
-  text-align:center; padding:10px 12px; border-radius:10px; margin-bottom:10px;
-  font-size:.95rem; font-weight:700; transition:all .2s; min-height:42px;
+  text-align:center; padding:5px 10px; border-radius:10px; margin-bottom:5px;
+  font-size:.88rem; font-weight:700; transition:all .2s; min-height:32px;
   display:flex; align-items:center; justify-content:center; gap:6px;
 }
 .prev-empty   { background:#f4f8f4; color:var(--mut); }
@@ -510,13 +510,13 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 .strip {
   position:fixed; bottom:0; left:0; right:0; z-index:200;
   background:var(--gd); color:#fff;
-  padding:9px 14px calc(9px + var(--sab));
+  padding:6px 14px calc(6px + var(--sab));
   display:none; justify-content:space-around; align-items:center;
   box-shadow:0 -2px 12px rgba(0,0,0,.22);
 }
 .strip > div { text-align:center; }
-.sv { font-size:1.25rem; font-weight:800; line-height:1; }
-.sl { font-size:.6rem; opacity:.8; margin-top:1px; }
+.sv { font-size:1.1rem; font-weight:800; line-height:1; }
+.sl { font-size:.55rem; opacity:.8; margin-top:1px; }
 
 /* ═══════════════════════════════════════════════
    RÉSUMÉ
