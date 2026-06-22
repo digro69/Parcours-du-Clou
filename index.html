@@ -277,9 +277,24 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 .endgame-progress {
   font-size:.82rem; color:var(--mut); margin-bottom:4px; line-height:1.5;
 }
-.endgame-choices { display:grid; gap:9px; margin-top:16px; }
+.eg-email-wrap {
+  margin-top:14px; margin-bottom:4px;
+}
+.eg-email-lbl {
+  display:block; font-size:.8rem; font-weight:700; color:var(--gd);
+  margin-bottom:6px;
+}
+.eg-email-input {
+  width:100%; box-sizing:border-box;
+  padding:10px 12px; border-radius:10px;
+  border:2px solid #d0ddd4; font-size:.95rem; color:var(--txt);
+  background:#f8fbf9; outline:none; transition:border-color .15s;
+}
+.eg-email-input:focus { border-color:var(--gd); background:#fff; }
+
+.endgame-choices { display:grid; gap:9px; margin-top:12px; }
 .eg-btn {
-  width:100%; padding:14px 16px; border:none; border-radius:12px;
+  width:100%; padding:13px 16px; border:none; border-radius:12px;
   font-size:.93rem; font-weight:700; cursor:pointer;
   touch-action:manipulation; -webkit-tap-highlight-color:transparent;
   transition:opacity .12s; text-align:center;
@@ -576,12 +591,18 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
     <div class="endgame-icon">🏁</div>
     <h2>Terminer la partie ?</h2>
     <div class="endgame-progress" id="endgame-progress"></div>
+    <!-- Saisie e-mail -->
+    <div class="eg-email-wrap">
+      <label class="eg-email-lbl" for="eg-email">📧 Envoyer le scorecard par e-mail</label>
+      <input type="email" id="eg-email" class="eg-email-input"
+             placeholder="votre@adresse.com" autocomplete="email" inputmode="email">
+    </div>
     <div class="endgame-choices">
       <button class="eg-btn eg-save" onclick="finishRound(true)">
-        💾 Terminer et sauvegarder
+        📄 Générer le PDF et envoyer
       </button>
       <button class="eg-btn eg-nosave" onclick="finishRound(false)">
-        📊 Voir les résultats sans sauvegarder
+        📊 Voir les résultats sans envoyer
       </button>
       <button class="eg-btn eg-cancel" onclick="closeEndgame()">
         ← Continuer à jouer
@@ -1075,36 +1096,217 @@ function showEndgame() {
       ? `${n} trou${n>1?'s':''} joué${n>1?'s':''} · ${pts} point${pts>1?'s':''}`
       : `${n} trou${n>1?'s':''} joué${n>1?'s':''} · Brut : ${gross}`;
   document.getElementById('endgame-progress').textContent = prog;
+  /* Pré-remplir l'email mémorisé */
+  const savedEmail = localStorage.getItem('golf-clou-email') || '';
+  document.getElementById('eg-email').value = savedEmail;
   document.getElementById('modal-endgame').classList.add('open');
+  /* Focus sur le champ email après animation */
+  setTimeout(() => document.getElementById('eg-email').focus(), 350);
 }
 function closeEndgame() {
   document.getElementById('modal-endgame').classList.remove('open');
 }
-function finishRound(save) {
+async function finishRound(sendPDF) {
   closeEndgame();
-  S.saved = false;
-  if (save) {
-    try {
-      const data = {
-        date:     new Date().toLocaleDateString('fr-FR'),
-        ts:       Date.now(),
-        name:     S.name,
-        mode:     S.mode,
-        tee:      S.tee,
-        gender:   S.gender,
-        index:    S.index,
-        playHcp:  S.playHcp,
-        scores:   [...S.scores],
-        strokes:  [...S.strokes]
-      };
-      const hist = JSON.parse(localStorage.getItem('golf-clou-history')||'[]');
-      hist.unshift(data);
-      if(hist.length>20) hist.pop();
-      localStorage.setItem('golf-clou-history', JSON.stringify(hist));
-      S.saved = true;
-    } catch(e) { console.warn('[Save]', e); }
+  if (sendPDF) {
+    const email = (document.getElementById('eg-email').value || '').trim();
+    if (email) localStorage.setItem('golf-clou-email', email);
+    try { await generateAndSharePDF(email); }
+    catch(e) { console.warn('[PDF]', e); }
   }
   showSummary();
+}
+
+/* ─── Chargement dynamique de jsPDF ─── */
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+/* ─── Génération du scorecard PDF ─── */
+async function buildScoreCardPDF() {
+  await loadJsPDF();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, ml = 14, mr = 14, cw = W - ml - mr;
+  const GREEN = [26, 92, 42], LGRE = [232, 245, 234], WHITE = [255,255,255];
+  const dateFR = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  let y = 0;
+
+  /* ── Bandeau vert header ── */
+  doc.setFillColor(...GREEN);
+  doc.rect(0, 0, W, 28, 'F');
+  doc.setTextColor(...WHITE);
+  doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text('GOLF DU CLOU', W/2, 11, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text('Scorecard · ' + dateFR, W/2, 19, {align:'center'});
+  y = 36;
+
+  /* ── Infos joueur ── */
+  doc.setTextColor(0,0,0);
+  doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text(S.name || 'Joueur', ml, y);
+  y += 6;
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  const modeLabel = S.mode==='stableford'?'Stableford':'Stroke Play';
+  doc.text(`Mode : ${modeLabel}   ·   Départ : ${S.tee}   ·   Index : ${S.index}   ·   Hcp de jeu : ${S.playHcp>=0?'+':''}${S.playHcp}`, ml, y);
+  y += 9;
+
+  /* ── Colonnes ── */
+  const isStbl = S.mode==='stableford';
+  const HEADS = ['Trou','Par','Idx','Dist','HCP','Score', isStbl?'Pts':'Résultat'];
+  const RATIOS = [0.09, 0.08, 0.08, 0.12, 0.09, 0.10, 0.44]; // somme = 1
+  const CW = RATIOS.map(r => r * cw);
+
+  function drawRowBg(yy, fill) {
+    doc.setFillColor(...fill);
+    doc.rect(ml, yy - 4.5, cw, 6.5, 'F');
+  }
+  function drawCells(yy, vals, bold) {
+    doc.setFont('helvetica', bold?'bold':'normal');
+    doc.setFontSize(bold?8.5:8);
+    let x = ml;
+    vals.forEach((v, i) => {
+      doc.text(String(v??'–'), x + CW[i]/2, yy, {align:'center'});
+      x += CW[i];
+    });
+  }
+
+  /* En-tête de colonne */
+  drawRowBg(y, GREEN);
+  doc.setTextColor(...WHITE);
+  drawCells(y, HEADS, true);
+  y += 7;
+
+  /* ── Lignes trous ── */
+  let grossAller=0, ptsAller=0, vsparAller=0;
+  let grossTotal=0, ptsTotal=0, vsparTotal=0;
+  let nAller=0, nRetour=0;
+
+  const strokeLbl = (d) => {
+    const M={'-3':'Albatros','-2':'Eagle','-1':'Birdie','0':'Par','1':'Bogey','2':'Double','3':'Triple'};
+    return M[d] || (d>0?`+${d}`:`${d}`);
+  };
+
+  for (let i=0; i<18; i++) {
+    /* Séparateur mi-parcours */
+    if (i===9) {
+      /* Sous-total Aller */
+      drawRowBg(y, [200, 230, 205]);
+      doc.setTextColor(0,0,0);
+      drawCells(y, [
+        'Aller','','','','',grossAller||'–',
+        isStbl ? `${ptsAller} pts` : (vsparAller===0?'E':vsparAller>0?`+${vsparAller}`:vsparAller)
+      ], true);
+      y += 7;
+    }
+
+    const h = HOLES[i], sc = S.scores[i], sk = S.strokes[i];
+    const pts = sc!=null ? sbPts(sc,h.par,sk) : null;
+    const diff = sc!=null ? sc - h.par : null;
+
+    /* Alternance de fond */
+    doc.setTextColor(0,0,0);
+    drawRowBg(y, i%2===0 ? LGRE : WHITE);
+
+    const resultCell = sc===null ? '–'
+      : isStbl ? `${pts} pt${pts!==1?'s':''}`
+      : strokeLbl(diff);
+
+    drawCells(y, [
+      i+1, h.par, h.hcp, `${h[S.tee]}m`,
+      sk>0?`+${sk}`:'0',
+      sc??'–',
+      resultCell
+    ], false);
+    y += 6.5;
+
+    if (sc!=null) {
+      if (i<9) { grossAller+=sc; ptsAller+=pts; vsparAller+=diff; nAller++; }
+      else      { nRetour++; }
+      grossTotal+=sc; ptsTotal+=pts||0; vsparTotal+=diff||0;
+    }
+  }
+
+  /* Sous-total Retour */
+  const grossRetour = grossTotal - grossAller;
+  const ptsRetour   = ptsTotal - ptsAller;
+  const vsparRetour = vsparTotal - vsparAller;
+  drawRowBg(y, [200, 230, 205]);
+  doc.setTextColor(0,0,0);
+  drawCells(y, [
+    'Retour','','','','', grossRetour||'–',
+    isStbl ? `${ptsRetour} pts` : (vsparRetour===0?'E':vsparRetour>0?`+${vsparRetour}`:vsparRetour)
+  ], true);
+  y += 7;
+
+  /* ── Total final ── */
+  drawRowBg(y, GREEN);
+  doc.setTextColor(...WHITE);
+  const vpT = vsparTotal===0?'E':vsparTotal>0?`+${vsparTotal}`:vsparTotal;
+  drawCells(y, [
+    'TOTAL', '', '', '', '', grossTotal||'–',
+    isStbl ? `${ptsTotal} pts` : vpT
+  ], true);
+  y += 12;
+
+  /* ── Pied de page ── */
+  doc.setTextColor(150,150,150);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+  doc.text('Golf du Clou · 1985 · Généré par l\'application Stableford', W/2, y, {align:'center'});
+
+  return doc;
+}
+
+/* ─── Partage / envoi du PDF ─── */
+async function generateAndSharePDF(email) {
+  const doc = await buildScoreCardPDF();
+  const filename = `scorecard-golf-du-clou-${new Date().toISOString().slice(0,10)}.pdf`;
+  const blob = doc.output('blob');
+  const file = new File([blob], filename, {type:'application/pdf'});
+
+  /* Web Share API : iOS 15+ / Android Chrome → feuille de partage native */
+  if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
+    await navigator.share({
+      title: 'Scorecard Golf du Clou',
+      text: `Résultats de ${S.name||'la partie'} — ${new Date().toLocaleDateString('fr-FR')}`,
+      files: [file]
+    });
+    return;
+  }
+
+  /* Fallback desktop : téléchargement + ouverture mailto */
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+
+  if (email) {
+    let pts=0, gross=0, vspar=0, n=0;
+    S.scores.forEach((sc,i)=>{
+      if(sc!=null){ gross+=sc; pts+=sbPts(sc,HOLES[i].par,S.strokes[i]); vspar+=sc-HOLES[i].par; n++; }
+    });
+    const isStbl = S.mode==='stableford';
+    const vp = vspar===0?'E':vspar>0?`+${vspar}`:vspar;
+    const body = encodeURIComponent(
+      `Bonjour,\n\nCi-joint le scorecard de ${S.name||'la partie'} du ${new Date().toLocaleDateString('fr-FR')}.\n\n`+
+      `Mode : ${isStbl?'Stableford':'Stroke Play'} · Départ : ${S.tee} · Index : ${S.index} · Hcp : ${S.playHcp>=0?'+':''}${S.playHcp}\n`+
+      `Trous joués : ${n}/18\n`+
+      `Score brut : ${gross}\n`+
+      (isStbl?`Points Stableford : ${pts}`:`Vs par : ${vp}`)+
+      `\n\n(Le PDF a été téléchargé sur votre appareil — veuillez le joindre manuellement)\n\nCordialement`
+    );
+    const subj = encodeURIComponent(`Scorecard Golf du Clou – ${new Date().toLocaleDateString('fr-FR')}`);
+    window.open(`mailto:${email}?subject=${subj}&body=${body}`, '_blank');
+  }
 }
 
 function renderHole(i) {
