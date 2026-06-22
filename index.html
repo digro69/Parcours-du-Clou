@@ -626,8 +626,8 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
       <button class="splash-mode-btn" data-mode="stroke"
               onclick="selectModeSplash('stroke')">
         <span class="sm-icon">📊</span>
-        <span class="sm-name">Scorecard</span>
-        <span class="sm-desc">Score total brut/net</span>
+        <span class="sm-name">Stroke Play</span>
+        <span class="sm-desc">Score brut vs par</span>
       </button>
     </div>
   </div>
@@ -989,8 +989,8 @@ function startRound() {
   // Configure strip labels selon mode
   if (S.mode==='stroke') {
     document.getElementById('st-a-lbl').textContent = 'Brut';
-    document.getElementById('st-b-lbl').textContent = 'Net';
-    document.getElementById('st-c-lbl').textContent = 'vs Par';
+    document.getElementById('st-b-lbl').textContent = 'vs Par';
+    document.getElementById('st-c-lbl').textContent = 'Trous';
   } else {
     document.getElementById('st-a-lbl').textContent = 'Points';
     document.getElementById('st-b-lbl').textContent = 'Brut';
@@ -1020,7 +1020,7 @@ function selectModeSplash(mode) {
   // Affiche le rappel du mode choisi dans l'écran setup
   const labels = {
     stableford: { icon:'🎯', label:'Mode Stableford · Points par trou' },
-    stroke:     { icon:'📊', label:'Mode Scorecard · Score brut / net'  }
+    stroke:     { icon:'📊', label:'Mode Stroke Play · Score brut vs par' }
   };
   const info = labels[mode] || {};
   const ri = document.getElementById('mode-reminder-icon');
@@ -1228,8 +1228,8 @@ function getResultClass(gross, par, sk) {
     if (pts===1) return 'sel-bogey';
     return 'sel-bad';
   } else {
-    const net = gross - sk;
-    const diff = net - par;
+    // Stroke-play : couleur basée sur brut vs par
+    const diff = gross - par;
     if (diff<=-2) return 'sel-eagle';
     if (diff===-1) return 'sel-birdie';
     if (diff===0)  return 'sel-par';
@@ -1267,31 +1267,31 @@ function updatePreview(val) {
     el.textContent = SB_LABELS[p]||`🏆 ${pts} pts`;
     el.textContent += ` (${p} pt${p>1?'s':''})`;
   } else {
-    // Stroke-play
-    const net  = val - sk;
-    const diff = net - h.par;
+    // Stroke-play : résultat basé sur le score brut vs par
+    const diff = val - h.par;
     const lbl  = strokeLabel(diff);
     const cls  = diff<=-2?'prev-eagle':diff===-1?'prev-birdie':diff===0?'prev-par':diff===1?'prev-bogey':'prev-bad';
     el.className='pts-preview '+cls;
-    el.textContent = `Net : ${net} · ${lbl}`;
+    el.textContent = `Brut : ${val} · ${lbl}`;
   }
 }
 
 function updateStrip() {
-  let gross=0, net=0, pts=0, vspar=0, n=0;
+  let gross=0, pts=0, vsparBrut=0, n=0;
   S.scores.forEach((sc,i)=>{
     if (sc!==null) {
-      gross+=sc; net+=sc-S.strokes[i];
-      pts+=sbPts(sc,HOLES[i].par,S.strokes[i]);
-      vspar+=(sc-S.strokes[i])-HOLES[i].par;
+      gross += sc;
+      pts   += sbPts(sc, HOLES[i].par, S.strokes[i]);
+      vsparBrut += sc - HOLES[i].par;   // brut vs par (sans handicap)
       n++;
     }
   });
+
   if (S.mode==='stroke') {
+    const vp = n>0 ? (vsparBrut===0?'E':vsparBrut>0?`+${vsparBrut}`:vsparBrut) : '–';
     document.getElementById('st-a').textContent = n>0 ? gross : '–';
-    document.getElementById('st-b').textContent = n>0 ? net   : '–';
-    const vp = n>0 ? (vspar===0?'E':vspar>0?`+${vspar}`:vspar) : '–';
-    document.getElementById('st-c').textContent = vp;
+    document.getElementById('st-b').textContent = vp;
+    document.getElementById('st-c').textContent = n+'/18';
   } else {
     document.getElementById('st-a').textContent = pts;
     document.getElementById('st-b').textContent = n>0 ? gross : '–';
@@ -1303,13 +1303,13 @@ function updateStrip() {
   if (!rb) return;
   rb.className = n>0 ? 'running-bar' : 'running-bar empty';
   if (S.mode==='stroke') {
-    const vpStr = n>0 ? (vspar===0?'E':vspar>0?`+${vspar}`:vspar) : '–';
+    const vpStr = n>0 ? (vsparBrut===0?'E':vsparBrut>0?`+${vsparBrut}`:vsparBrut) : '–';
     document.getElementById('rb-v1').textContent = n>0 ? gross : '–';
     document.getElementById('rb-l1').textContent = 'Brut';
-    document.getElementById('rb-v2').textContent = n>0 ? net   : '–';
-    document.getElementById('rb-l2').textContent = 'Net';
-    document.getElementById('rb-v3').textContent = vpStr;
-    document.getElementById('rb-l3').textContent = 'vs Par';
+    document.getElementById('rb-v2').textContent = vpStr;
+    document.getElementById('rb-l2').textContent = 'vs Par';
+    document.getElementById('rb-v3').textContent = n>0 ? (67-gross>0?'+':'')+(67-gross) : '–';
+    document.getElementById('rb-l3').textContent = 'vs Par 67';
   } else {
     document.getElementById('rb-v1').textContent = pts;
     document.getElementById('rb-l1').textContent = 'Points';
@@ -1352,12 +1352,13 @@ function showSummary() {
   document.getElementById('pfill').style.width='100%';
 
   const td=TEES[S.tee], sss=td.sss[S.gender], slope=td.slope[S.gender], par=td.par;
-  let tGross=0, tNet=0, tPts=0, tVsPar=0, n=0;
+  let tGross=0, tNet=0, tPts=0, tVsParBrut=0, n=0;
   S.scores.forEach((sc,i)=>{
     if(sc!==null){
       tGross+=sc; tNet+=sc-S.strokes[i];
       tPts+=sbPts(sc,HOLES[i].par,S.strokes[i]);
-      tVsPar+=(sc-S.strokes[i])-HOLES[i].par; n++;
+      tVsParBrut += sc - HOLES[i].par;   // brut vs par
+      n++;
     }
   });
 
@@ -1367,14 +1368,15 @@ function showSummary() {
   const isStbl=S.mode==='stableford';
 
   // ── Header ──
-  const mainVal = isStbl ? tPts : (tVsPar===0?'E':tVsPar>0?`+${tVsPar}`:tVsPar);
-  const mainLbl = isStbl ? 'points Stableford · standard 36' : 'score net vs par';
+  const vpBrutStr = tVsParBrut===0?'E':tVsParBrut>0?`+${tVsParBrut}`:tVsParBrut;
+  const mainVal = isStbl ? tPts : vpBrutStr;
+  const mainLbl = isStbl ? 'points Stableford · standard 36' : 'score brut vs par';
   const emoji = isStbl
     ? (tPts>=36?'🎉':tPts>=28?'👍':'💪')
-    : (tVsPar<0?'🎉':tVsPar===0?'👍':'💪');
+    : (tVsParBrut<0?'🎉':tVsParBrut===0?'👍':'💪');
 
   document.getElementById('sum-hdr').innerHTML=`
-    <h2>${emoji} ${S.name} – ${isStbl?'Stableford':'Stroke-Play'} · Départ ${S.tee}</h2>
+    <h2>${emoji} ${S.name} – ${isStbl?'Stableford':'Stroke Play'} · Départ ${S.tee}</h2>
     <div class="sum-pts">${mainVal}</div>
     <div class="sum-lbl">${mainLbl}</div>
     <div style="margin-top:7px;font-size:.8rem;opacity:.85">
@@ -1383,12 +1385,13 @@ function showSummary() {
     ${S.saved?'<div class="saved-badge">💾 Partie sauvegardée</div>':''}`;
 
   // ── Stats ──
+  const tNetVsParStr = (tNet-par)===0?'E':(tNet-par)>0?`+${tNet-par}`:`${tNet-par}`;
   let statsHtml = `
     <div class="stat-row"><span class="stat-lbl">Trous joués</span><span class="stat-val">${n}/18</span></div>
     <div class="stat-row"><span class="stat-lbl">Score brut</span><span class="stat-val">${tGross}</span></div>
+    <div class="stat-row"><span class="stat-lbl">Score brut vs par (${par})</span><span class="stat-val">${vpBrutStr}</span></div>
     <div class="stat-row"><span class="stat-lbl">Score net</span><span class="stat-val">${tNet}</span></div>
-    <div class="stat-row"><span class="stat-lbl">Score brut vs par (${par})</span><span class="stat-val">${tGross>=par?'+':''}${tGross-par}</span></div>
-    <div class="stat-row"><span class="stat-lbl">Score net vs par</span><span class="stat-val">${tVsPar===0?'E':tVsPar>0?`+${tVsPar}`:tVsPar}</span></div>`;
+    <div class="stat-row"><span class="stat-lbl">Score net vs par</span><span class="stat-val">${tNetVsParStr}</span></div>`;
   if (isStbl) {
     const vs=tPts>36?`−${tPts-36}`:`+${36-tPts}`;
     statsHtml+=`
@@ -1423,7 +1426,7 @@ function buildScorecard(isStbl) {
   // En-têtes selon mode
   const heads = isStbl
     ? `<tr><th>T.</th><th>Par</th><th>HCP</th><th>Dist</th><th>Brut</th><th>Net</th><th>Pts</th></tr>`
-    : `<tr><th>T.</th><th>Par</th><th>HCP</th><th>Dist</th><th>Brut</th><th>Net</th><th>vs⁺</th></tr>`;
+    : `<tr><th>T.</th><th>Par</th><th>HCP</th><th>Dist</th><th>Brut</th><th>vs Par</th></tr>`;
 
   let rows = '';
   HOLES.forEach((h,i)=>{
@@ -1434,15 +1437,16 @@ function buildScorecard(isStbl) {
           <td>${aG||'–'}</td><td>${aNet||'–'}</td><td>${aPts}</td></tr>`;
       } else {
         const v=aVP===0?'E':aVP>0?`+${aVP}`:aVP;
-        rows+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Aller</td>
-          <td>${aG||'–'}</td><td>${aNet||'–'}</td><td class="vpar">${v}</td></tr>`;
+        rows+=`<tr class="tr"><td colspan="5" style="text-align:left;padding-left:6px">Aller</td>
+          <td class="vpar">${aG?v:'–'}</td></tr>`;
       }
     }
 
     const sc=S.scores[i], sk=S.strokes[i];
     const net=sc!==null?sc-sk:null;
     const pts=sc!==null?sbPts(sc,h.par,sk):null;
-    const vpd=net!==null?net-h.par:null;
+    // Stroke-play : vs par basé sur le brut
+    const vpd=sc!==null?sc-h.par:null;
     const vpStr=vpd===null?'–':strokeVparStr(vpd);
     const vpCls=vpd!==null?strokeVparClass(vpd):'';
 
@@ -1459,7 +1463,7 @@ function buildScorecard(isStbl) {
         <td><strong>${i+1}</strong></td><td>${h.par}</td>
         <td>${h.hcp}${sk!==0?`<sup style="color:var(--gold);font-weight:800">${sk>0?'+':''}${sk}</sup>`:''}</td>
         <td style="font-size:.72rem">${h[S.tee]}m</td>
-        <td>${sc??'–'}</td><td>${net??'–'}</td>
+        <td>${sc??'–'}</td>
         <td class="vpar ${vpCls}">${vpStr}</td>
       </tr>`;
     }
@@ -1468,7 +1472,7 @@ function buildScorecard(isStbl) {
     else      { rG+=sc??0; rNet+=net??0; rPts+=pts??0; rVP+=vpd??0; }
   });
 
-  // Retour
+  // Retour + Total
   if (isStbl) {
     rows+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Retour</td>
       <td>${rG||'–'}</td><td>${rNet||'–'}</td><td>${rPts}</td></tr>
@@ -1478,11 +1482,11 @@ function buildScorecard(isStbl) {
   } else {
     const tv=aVP+rVP; const tvStr=tv===0?'E':tv>0?`+${tv}`:tv;
     const rv=rVP===0?'E':rVP>0?`+${rVP}`:rVP;
-    rows+=`<tr class="tr"><td colspan="4" style="text-align:left;padding-left:6px">Retour</td>
-      <td>${rG||'–'}</td><td>${rNet||'–'}</td><td class="vpar">${rv}</td></tr>
-    <tr class="tr-total"><td colspan="4" style="text-align:left;padding-left:6px"><strong>Total</strong></td>
-      <td><strong>${(aG+rG)||'–'}</strong></td><td><strong>${(aNet+rNet)||'–'}</strong></td>
-      <td class="vpar ${strokeVparClass(aVP+rVP)}"><strong>${tvStr}</strong></td></tr>`;
+    rows+=`<tr class="tr"><td colspan="5" style="text-align:left;padding-left:6px">Retour</td>
+      <td class="vpar">${rG?rv:'–'}</td></tr>
+    <tr class="tr-total"><td colspan="4" style="text-align:left;padding-left:6px"><strong>Total · Brut ${aG+rG}</strong></td>
+      <td><strong>${(aG+rG)||'–'}</strong></td>
+      <td class="vpar ${strokeVparClass(tv)}"><strong>${tvStr}</strong></td></tr>`;
   }
 
   document.getElementById('sc-table').innerHTML=`<thead>${heads}</thead><tbody>${rows}</tbody>`;
