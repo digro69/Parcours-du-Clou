@@ -336,28 +336,33 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
 }
 .hole-half small { display:block; font-size:.68rem; opacity:.6; font-weight:400; margin-top:2px; }
 
-/* ── Photo du trou ── */
+/* ── Photo du trou (positionée en absolu, bord droit de la carte) ── */
 .hole-photo {
-  width:88px; height:88px; border-radius:10px; overflow:hidden;
-  flex-shrink:0; position:relative;
-  background:rgba(0,0,0,.18); align-self:flex-start;
-  box-shadow:0 2px 10px rgba(0,0,0,.35);
+  position:absolute; right:0; top:0; bottom:0;
+  width:130px; overflow:hidden;
+  border-radius:0 14px 14px 0;
+}
+/* Fondu gauche pour intégrer la photo dans le fond vert */
+.hole-photo::before {
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to right, #1a5c2a 0%, rgba(26,92,42,.55) 38%, transparent 75%);
 }
 .hole-photo img {
   width:100%; height:100%; object-fit:cover; display:block;
-  opacity:0; transition:opacity .35s;
+  opacity:0; transition:opacity .4s;
 }
 /* Placeholder affiché si pas de photo */
 .hole-photo-ph {
-  position:absolute; inset:0;
+  position:absolute; inset:0; z-index:0;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   gap:3px; pointer-events:none;
+  background:rgba(0,0,0,.15);
 }
-.hole-photo-ph .ph-icon { font-size:2rem; opacity:.45; }
+.hole-photo-ph .ph-icon { font-size:2.2rem; opacity:.45; }
 .hole-photo-ph .ph-num  {
   font-size:.7rem; font-weight:800; opacity:.35;
-  text-transform:uppercase; letter-spacing:1px;
+  text-transform:uppercase; letter-spacing:1px; color:#fff;
 }
 /* Grille Par / Index / Dist */
 .hole-meta-grid {
@@ -1119,7 +1124,18 @@ function renderHole(i) {
   const photoSrc = `./photos/hole-${photoNum}.jpg`;
 
   document.getElementById('hole-display').innerHTML=`
-    <div class="hole-card" data-n="${i+1}">
+    <div class="hole-card" data-n="${i+1}" style="padding-right:calc(16px + 90px)">
+      <!-- Photo en absolu sur le bord droit de la carte -->
+      <div class="hole-photo" id="hole-photo-${i}">
+        <div class="hole-photo-ph">
+          <span class="ph-icon">⛳</span>
+          <span class="ph-num">Trou ${i+1}</span>
+        </div>
+        <img src="${photoSrc}"
+             alt="Trou ${i+1}"
+             onload="this.style.opacity=1"
+             onerror="this.style.display='none'">
+      </div>
       <div class="hole-top">
         <div>
           <div class="hole-lbl">Trou</div>
@@ -1131,16 +1147,6 @@ function renderHole(i) {
             ${i<9?'Aller':'Retour'}
             <small>Trou ${i+1} sur 18</small>
           </div>
-        </div>
-        <div class="hole-photo" id="hole-photo-${i}">
-          <div class="hole-photo-ph">
-            <span class="ph-icon">⛳</span>
-            <span class="ph-num">Trou ${i+1}</span>
-          </div>
-          <img src="${photoSrc}"
-               alt="Trou ${i+1}"
-               onload="this.style.opacity=1"
-               onerror="this.style.display='none'">
         </div>
       </div>
       <div class="hole-meta-grid">
